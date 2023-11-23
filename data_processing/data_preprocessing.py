@@ -25,13 +25,11 @@ def augment_strategy_1(raw_image):
 
 
 # Data augmentation method 2 - Varying Elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4]
-def augment_strategy_2(raw_image, random_state=None, border=30, alpha_range=[12,36], sigma_range=[2.7,3.82]):
+def augment_strategy_2(raw_image, random_state=None, border=30, alpha_range=[10,23], sigma_range=[2.8,3.82]):
 
     assert len(raw_image.shape) == 3
-
     alpha = random.randint(alpha_range[0], alpha_range[-1])
     sigma = random.uniform(sigma_range[0], sigma_range[-1])
-
 
     if random_state is None:
         random_state = np.random.RandomState(None)
@@ -121,13 +119,13 @@ def augment_strategy_3(input_image, min_zoom = 1.05, max_zoom = 1.34):
 
 
 # Data augmentation method 4 - Random circular and horizontal masking
-def augment_strategy_4(input_image, num_circles=12, num_rectangles=10):
-    # Convert the image to a NumPy array
+def augment_strategy_4(input_image, num_circles=40, num_rectangles=15):
+
     img_array = input_image
 
     for i in range(num_circles):
         # Specify the radius of the circle within the range
-        circle_radius = random.randint(5, 35)
+        circle_radius = random.randint(5, 10)
 
         # Calculate the center of the image
         center = (img_array.shape[1] // 2, img_array.shape[0] // 2)
@@ -152,7 +150,7 @@ def augment_strategy_4(input_image, num_circles=12, num_rectangles=10):
 
     for i in range(num_rectangles):
         # Specify the dimensions of the rectangle
-        rect_width = random.randint(4,14)
+        rect_width = random.randint(2,7)
         rect_height = img_array.shape[0]
 
         # Specify the top-left corner of the rectangle
@@ -169,7 +167,8 @@ def augment_strategy_4(input_image, num_circles=12, num_rectangles=10):
         img_array[mask] = [255, 255, 255]
 
     # Convert the NumPy array back to an image
-    result_image = Image.fromarray(img_array)
+    result_image = img_array
+    
 
     return result_image
 
