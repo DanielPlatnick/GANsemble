@@ -9,36 +9,8 @@ import random
 from scipy.ndimage import map_coordinates, gaussian_filter
 from itertools import combinations
 
+
 ''' Augmentation functions expect and return a numpy array '''
-
-# Checking to make sure each example is the same dimensions
-def check_data_size(data_dir):
-    valid_dataset_size_check = 0
-    invalid_dataset_size_check = 0
-    plastic_obs = 0
-    non_plastic_obs = 0
-    image_1_path = data_dir + 'Silica\\Silica_95.png' 
-    image_1 = cv2.imread(image_1_path)
-    image_1_size = np.shape(image_1)
-
-    class_dir_size_list = []
-
-    for class_dir in os.listdir(data_dir):
-        class_dir = os.path.join(data_dir, class_dir)
-        class_dir_size_list.append(len(os.listdir(class_dir)))
-        if 'Cellulosic' in class_dir or 'Silica' in class_dir:
-            non_plastic_obs += len(os.listdir(class_dir))
-        else:
-            plastic_obs += len(os.listdir(class_dir))
-        for data_instance in os.listdir(class_dir):
-            data_instance = os.path.join(class_dir, data_instance)
-            data_instance = cv2.imread(data_instance)
-            if np.shape(data_instance) == image_1_size:
-                valid_dataset_size_check += 1
-            else:
-                invalid_dataset_size_check += 1
-    return valid_dataset_size_check, invalid_dataset_size_check, class_dir_size_list, plastic_obs, non_plastic_obs
-
 
 # Data augmentation method 1 - Horizontal shifting and horizontal flipping
 def augment_strategy_1(raw_image):
@@ -52,8 +24,7 @@ def augment_strategy_1(raw_image):
     return augmented_image
 
 
-# Data augmentation method 2 - Varying Elastic deformation and random rotation
-#started a=50 s=5  --> a-[15,50] s->[2.5,4]
+# Data augmentation method 2 - Varying Elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4]
 def augment_strategy_2(raw_image, random_state=None, border=30, alpha_range=[12,36], sigma_range=[2.7,3.82]):
 
     assert len(raw_image.shape) == 3
