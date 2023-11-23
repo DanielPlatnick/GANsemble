@@ -112,21 +112,25 @@ testing_image = np.array(testing_image)
 combos = combine_augment_strategies()
 combos = [strat_combos for strat_combos in combos]
 augment_strategy_list = combos
-# for i, comb in enumerate(listed_combos):
-#     print(i, comb)
+for i, comb in enumerate(combos):
+    print(i, comb)
+# exit()
 
 # for combo in combos[14]:
 #     print(combo)
 #     testing_image = combo(testing_image)
-num_samples_needed = 2
+num_samples_needed = 30
 if not os.path.exists(augmented_data_dir):
-    os.makedirs(augmented_data_dir)
+    os.mkdir(augmented_data_dir)
 
 # For each augmentation strategy, create a synthetic dataset of size: num_samples_needed * num_classes
-for aug_strat in augment_strategy_list:
-    aug_strat = augment_strategy_list[11]
-    print(aug_strat)
+for aug_strat in range(len(augment_strategy_list)):
+#temp playing with more extreme aug strats
+    
+    aug_strat = 14
 
+    aug_strat_dir = augmented_data_dir + f"\\aug_strategy_{aug_strat+1}\\"
+    if not os.path.exists(aug_strat_dir): os.mkdir(aug_strat_dir)
     for obs_class in os.listdir(polar_data_dir):
         class_dir = polar_data_dir + obs_class
 
@@ -150,14 +154,14 @@ for aug_strat in augment_strategy_list:
                     # plt.imshow(real_sample)
                     # plt.show()
 
-                    for strat in aug_strat:
+                    for strat in augment_strategy_list[aug_strat]:
                         real_sample = strat(real_sample)
                     
                     augmented_image = Image.fromarray(real_sample.astype('uint8'))
-                    augmented_data_class_dir = augmented_data_dir + obs_class
+                    augmented_data_class_dir = aug_strat_dir + obs_class
                     if not os.path.exists(augmented_data_class_dir): os.mkdir(augmented_data_class_dir)
                     class_name = class_obs_list[sample].split('_')[0]
-                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{augment_strategy_list.index(aug_strat)}_{class_name}_{num_samples_generated + 1}.png")
+                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{aug_strat+1}_{class_name}_{num_samples_generated + 1}.png")
                     augmented_image.save(png_path)
 
                     # plt.imshow(augmented_image)
@@ -166,7 +170,7 @@ for aug_strat in augment_strategy_list:
                     num_samples_generated += 1
                 # Breaks out of loop after exhaustively 
                 break
-            
+
             if samples_to_generate >= num_real_samples:
                 for sample in range(num_real_samples):
                     real_sample_path = os.path.join(class_dir, class_obs_list[sample])
@@ -175,18 +179,17 @@ for aug_strat in augment_strategy_list:
                     # print(real_sample)
                     print(real_sample_path)
 
-                    for strat in aug_strat:
+                    for strat in augment_strategy_list[aug_strat]:
                         real_sample = strat(real_sample)
                     
                     augmented_image = Image.fromarray(real_sample.astype('uint8'))
-                    augmented_data_class_dir = augmented_data_dir + obs_class
+                    augmented_data_class_dir = aug_strat_dir + obs_class
                     if not os.path.exists(augmented_data_class_dir): os.mkdir(augmented_data_class_dir)
                     class_name = class_obs_list[sample].split('_')[0]
-                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{augment_strategy_list.index(aug_strat)}_{class_name}_{num_samples_generated + 1}.png")
+                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{aug_strat+1}_{class_name}_{num_samples_generated + 1}.png")
                     augmented_image.save(png_path)
                 
                     num_samples_generated += 1
-                    print(real_sample_path)
 
 
             # Check if there are remaining samples to generate
@@ -200,14 +203,14 @@ for aug_strat in augment_strategy_list:
                     real_sample = Image.open(real_sample_path)
                     real_sample = np.array(real_sample)
 
-                    for strat in aug_strat:
+                    for strat in augment_strategy_list[aug_strat]:
                         real_sample = strat(real_sample)
                     
                     augmented_image = Image.fromarray(real_sample.astype('uint8'))
-                    augmented_data_class_dir = augmented_data_dir + obs_class
+                    augmented_data_class_dir = aug_strat_dir + obs_class
                     if not os.path.exists(augmented_data_class_dir): os.mkdir(augmented_data_class_dir)
                     class_name = class_obs_list[sample].split('_')[0]
-                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{augment_strategy_list.index(aug_strat)}_{class_name}_{num_samples_generated + 1}.png")
+                    png_path = os.path.join(augmented_data_class_dir, f"augstrat_{aug_strat+1}_{class_name}_{num_samples_generated + 1}.png")
                     augmented_image.save(png_path)
 
 
