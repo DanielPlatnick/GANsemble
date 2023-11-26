@@ -24,7 +24,7 @@ def augment_strategy_1(raw_image):
     return augmented_image
 
 
-# Data augmentation method 2 - Varying Elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4]
+# Data augmentation method 2 - Varying elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4]
 def augment_strategy_2(raw_image, random_state=None, border=30, alpha_range=[10,23], sigma_range=[2.8,3.82]):
 
     assert len(raw_image.shape) == 3
@@ -169,11 +169,10 @@ def augment_strategy_4(input_image, num_circles=40, num_rectangles=15):
     # Convert the NumPy array back to an image
     result_image = img_array
     
-
     return result_image
 
 
-# Combine the strategies in a factorial study design
+# Combine the strategies in a factorial study design            #LOOK INTO SPECIFICS OF NUMBER OF STUDIES GENERATED
 def combine_augment_strategies(augment_strategies=[augment_strategy_1, augment_strategy_2, augment_strategy_3, augment_strategy_4]):
 
     solo_combinations = [[strat] for strat in augment_strategies]
