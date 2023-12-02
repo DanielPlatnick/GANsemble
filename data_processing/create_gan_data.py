@@ -6,7 +6,6 @@ from build_augmented_data import *
 Chosen dataset based on CNN combines with the original dataset to balance it and train cGAN
 """
 
-
 # when training the cGAN on data for real, only use transformations that preserve the invertible property (so the cGAN will not produce samples out of the training set distribution)
 def generate_gan_data_paths(data_processing_dir, desired_enriched_class_size=35):
 
@@ -101,7 +100,9 @@ def generate_gan_baseline_data_paths(data_processing_dir, desired_enriched_class
                         raw_sample_path = raw_class_dir_path + raw_sample
                         curr_enriched_class.append(raw_sample_path)
             else:
-                curr_enriched_class.append(random.choice(starting_raw_data_list))
+                random_choice = random.choice(starting_raw_data_list)
+                random_choice_path = raw_class_dir_path + random_choice
+                curr_enriched_class.append(random_choice_path)
 
             # if len(curr_enriched_class) < desired_enriched_class_size:
         list_of_class_lists.append(curr_enriched_class)
@@ -109,17 +110,45 @@ def generate_gan_baseline_data_paths(data_processing_dir, desired_enriched_class
     return list_of_class_lists
                 
 
+def generate_gan_baseline_dataset(gan_baseline_data_paths, gan_baseline_dataset_dir):
+    gan_baseline_class_list = os.listdir(gan_baseline_dataset_dir)
+    for class_path_list in range(len(gan_baseline_class_list)):
+        gan_baseline_class_dir = gan_baseline_dataset_dir + gan_baseline_class_list[class_path_list] + '\\'
+        print(gan_baseline_data_paths[class_path_list])
+        print(gan_baseline_class_dir)
+        counter = 0
+        for obs_path in range(len(gan_baseline_dataset_paths[class_path_list])):
+            src_dir = str(gan_baseline_data_paths[class_path_list][obs_path])
+            dest_file = src_dir.split('\\')[-1]
+            dest_dir = gan_baseline_class_dir + dest_file[:-4] + '_' + str(counter) + dest_file[-4:]
+            # exit(str(dest_dir))
+            shutil.copy(src_dir, dest_dir)
+            print(obs_path)
+            counter += 1
+        
+
 
 
 
 data_processing_dir = os.getcwd() + "\\data_processing\\"
-enriched_dataset_dir = data_processing_dir + 'gan_dataset\\'
+gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
+gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 
 # gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 
 # gan_dataset_size = sum([len(x) for x in gan_dataset_paths])
 # print(gan_dataset_size)
 
-# generate_gan_dataset(gan_dataset_paths, enriched_dataset_dir)
+# generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
 gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 print([len(x) for x in gan_baseline_dataset_paths])
+
+# generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
+dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
+
+for classdir in os.listdir(dir):
+    currdir = dir + classdir + '\\'
+    print(currdir, len(os.listdir(currdir)))
+
+
+
