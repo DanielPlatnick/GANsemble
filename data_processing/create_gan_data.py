@@ -116,7 +116,7 @@ def generate_gan_baseline_dataset(gan_baseline_data_paths, gan_baseline_dataset_
         gan_baseline_class_dir = gan_baseline_dataset_dir + gan_baseline_class_list[class_path_list] + '\\'
         print(gan_baseline_data_paths[class_path_list])
         print(gan_baseline_class_dir)
-        counter = 0
+        counter = 1
         for obs_path in range(len(gan_baseline_dataset_paths[class_path_list])):
             src_dir = str(gan_baseline_data_paths[class_path_list][obs_path])
             dest_file = src_dir.split('\\')[-1]
@@ -143,7 +143,7 @@ gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 print([len(x) for x in gan_baseline_dataset_paths])
 
-# generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
+generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
 dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
 
 for classdir in os.listdir(dir):
