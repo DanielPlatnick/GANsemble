@@ -49,7 +49,7 @@ else:
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 # Check if it's Windows
 if os_name == 'Windows':
-	gan_data_dir = "C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_dataset\\"
+	gan_data_dir = "data_processing\\gan_dataset\\"
 elif os_name == 'Darwin':
 	gan_data_dir = "data_processing/gan_dataset/"
 else:
@@ -133,19 +133,26 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10):
 	
     # label input
 	in_label = Input(shape=(1,))  #Shape 1
+	print(in_label.shape)
+	# exit()
 	# embedding for categorical input
     #each label (total 10 classes for cifar), will be represented by a vector of size 50. 
     #This vector of size 50 will be learnt by the discriminator
 	li = Embedding(n_classes, 50)(in_label) #Shape 1,50
+	# print(li.shape)
+	# exit()
 	# scale up to image dimensions with linear activation
 	n_nodes = in_shape[0] * in_shape[1]  #32x32 = 1024. 
 	li = Dense(n_nodes)(li)  #Shape = 1, 1024
 	# reshape to additional channel
 	li = Reshape((in_shape[0], in_shape[1], 1))(li)  #32x32x1
-    
-    
+
+
 	# image input
 	in_image = Input(shape=in_shape) #32x32x3
+	print(in_image.shape, li.shape)
+
+	exit()
 	# concat label as a channel
 	merge = Concatenate()([in_image, li]) #32x32x4 (4 channels, 3 for image and the other for labels)
     
@@ -255,7 +262,8 @@ def define_gan(g_model, d_model):
 # load cifar images
 def load_real_samples():
 
-	(trainX, trainy), (_, _) = load_data()   #cifar
+	(trainX, trainy), (_, _) = load_data()  
+	print(trainX.shape, trainy.shape)
 	# (trainX, trainy), (_, _) = load_gan_training_data(data_dir=gan_data_dir, image_size=(32, 32))
 
 	
