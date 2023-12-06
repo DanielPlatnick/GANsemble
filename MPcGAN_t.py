@@ -99,6 +99,9 @@ def generate_real_samples(dataset, n_samples):
     y = ones((n_samples, 1))  #Label=1 indicating they are real
     y = torch.from_numpy(y)
 
+    y = y.to(device)
+    X = X.to(device)
+    labels = labels.to(device)
 
     return [X, labels], y
 
@@ -106,13 +109,20 @@ def generate_real_samples(dataset, n_samples):
   # generates random noise of latent vect dims as well as a random class label
 # generate points in latent space as input for the generator
 def generate_latent_points(latent_dim, n_samples, n_classes=10):
-	# generate points in the latent space
-	x_input = randn(latent_dim * n_samples)
-	# reshape into a batch of inputs for the network
-	z_input = x_input.reshape(n_samples, latent_dim)
-	# generate labels
-	labels = randint(0, n_classes, n_samples)
-	return [z_input, labels]
+    # generate points in the latent space
+    x_input = randn(latent_dim * n_samples)
+    # reshape into a batch of inputs for the network
+    z_input = x_input.reshape(n_samples, latent_dim)
+    # generate labels
+    labels = randint(0, n_classes, n_samples)
+    # z_input = torch.from_numpy(z_input)
+    # labels = torch.from_numpy(labels)
+    z_input = z_input.astype('float32')
+    labels = torch.from_numpy(labels).long()
+
+    # dataset = [torch.from_numpy(tensor).to(device) for tensor in dataset]
+
+    return [z_input, labels]
 
 
 # use the generator to generate n fake examples, with class labels
@@ -134,7 +144,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
     
     # convert inputs to PyTorch tensors
     z_input = torch.from_numpy(z_input).float().to(device)
-    labels_input = torch.from_numpy(labels_input).long().to(device)
+    labels_input = labels_input.long().to(device)
     
     # predict outputs
     generator.eval()  # set the generator to evaluation mode
@@ -144,7 +154,8 @@ def generate_fake_samples(generator, latent_dim, n_samples):
     
     # create class labels
     y = torch.zeros((n_samples, 1)).to(device)  # Label=0 indicating they are fake
-    
+    # print(images.dtype, labels_input.dtype, y.dtype)
+    # exit()
     return [images, labels_input], y
 
 
@@ -162,7 +173,7 @@ class Discriminator(nn.Module):
 
     def forward(self, image, label):
         # label input
-        li = self.embedding(label)
+        li = self.embedding(label.long().to(device))
         li = self.fc1(li)
         li = li.view(-1, 1, self.in_shape[0], self.in_shape[1])  # Change the dimensions to (batch_size, channels, height, width)
 
@@ -171,9 +182,9 @@ class Discriminator(nn.Module):
         in_image = image
         # concat label as a channel
 
-        print(in_image.shape, li.shape)
+        # print(in_image.shape, li.shape, in_image.dtype, li.dtype)
         merge = torch.cat((in_image, li), 1)  # Concatenate along the channel dimension
-        print(merge.shape)
+        # print(merge.shape)
         # exit()
         # downsample
         fe = F.leaky_relu(self.conv1(merge), 0.2)
@@ -212,12 +223,21 @@ class Generator(nn.Module):
 
     def forward(self, z, labels):
         # Label input
+        # print("DEBUUUG", labels.dtype, labels.shape, type(labels))
+        labels = labels.long()
         li = self.embedding(labels)
         li = self.fc1(li)
         li = li.view(-1, 1, 8, 8)
 
-        # Image generator input
+        # # Image generator input
+        # li = torch.from_numpy(li.cpu().numpy().astype('float')).to(device)
+        # z = torch.from_numpy(z.cpu().numpy().astype('float')).to(device)
+        # print( z.dtype,   li.dtype)
+        # exit()
         z = self.fc2(z)
+        # print(z.shape, z.dtype)
+        # exit()
+
         z = z.view(-1, 128, 8, 8)
 
         # Concatenate label as a channel
@@ -246,8 +266,10 @@ class GAN(nn.Module):
         self.d_model.requires_grad_(False)  # Set discriminator to not trainable.
 
     def forward(self, gen_noise, gen_label):
-        gen_output = self.g_model(gen_noise, gen_label)
-        gan_output = self.d_model(gen_output, gen_label)
+        # print(gen_noise.dtype, gen_label.dtype)
+        # exit()
+        gen_output = self.g_model(gen_noise[0].to(device), gen_noise[1].to(device))
+        gan_output = self.d_model(gen_output, gen_label.to(device))
         return gan_output
 
 
@@ -299,21 +321,32 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 
 
             d_loss_fake.backward()
-            print(d_loss_fake)
+            # print(d_loss_fake)
             d_loss = 0.5 * (d_loss_real.item() + d_loss_fake.item())
 
-            print(d_loss)
+            # print(d_loss)
             d_model.optimizer.step()
 
             # prepare points in latent space as input for the generator
             [z_input, labels_input] = generate_latent_points(latent_dim, n_batch)
-            
+            # labels_input = labels_input.astype('int64')
+            z_input = torch.from_numpy(z_input).to(device)
+
+            labels_input = labels_input.to(device)
             # create inverted labels for the fake samples
-            y_gan = Variable(torch.ones(n_batch, 1))
+            y_gan = torch.ones(n_batch, 1).numpy()
+            y_gan = torch.from_numpy(y_gan.astype('float32'))
+            y_gan = Variable(y_gan)
+            # y_gan = Variable(torch.ones(n_batch, 1))
             
             # update the generator via the weight-frozen discriminator's error
             g_model.zero_grad()
-            g_loss = gan_model(z_input, labels_input, y_gan)
+
+            # print(type(z_input), z_input.dtype, labels_input.dtype, y_gan.dtype)
+            # exit()
+            g_loss = gan_model([z_input, labels_input], y_gan)
+            # print(g_loss)
+            g_loss = torch.mean(g_loss)
             g_loss.backward()
             g_model.optimizer.step()
 
@@ -387,11 +420,12 @@ latent_dim = 100
 # Define the GAN model
 # create the discriminator
 d_model = Discriminator()
+d_model.optimizer = torch.optim.Adam(d_model.parameters(), lr=0.0002, betas=(0.5, 0.999))
 # create the generator
 g_model = Generator(latent_dim)
 gan_model = GAN(g_model, d_model)
 # Define the GAN model optimizer
-optimizer = Adam(gan_model.parameters(), lr=0.0002, betas=(0.5, 0.999))
+g_model.optimizer = Adam(gan_model.parameters(), lr=0.0002, betas=(0.5, 0.999))
 # Define the loss function
 criterion = nn.BCELoss()
 dataset = load_real_samples()

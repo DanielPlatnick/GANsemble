@@ -152,7 +152,6 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10):
 	in_image = Input(shape=in_shape) #32x32x3
 	print(in_image.shape, li.shape)
 
-	exit()
 	# concat label as a channel
 	merge = Concatenate()([in_image, li]) #32x32x4 (4 channels, 3 for image and the other for labels)
     
@@ -214,10 +213,12 @@ def define_generator(latent_dim, n_classes=10):
     #Note that this part is same as unconditional GAN until the output layer. 
     #While defining model inputs we will combine input label and the latent input.
 	n_nodes = 128 * 8 * 8
+
 	gen = Dense(n_nodes)(in_lat)  #shape=8192
 	gen = LeakyReLU(alpha=0.2)(gen)
 	gen = Reshape((8, 8, 128))(gen) #Shape=8x8x128
 	# merge image gen and label input
+
 	merge = Concatenate()([gen, li])  #Shape=8x8x129 (Extra channel corresponds to the label)
 	# upsample to 16x16
 	gen = Conv2DTranspose(128, (4,4), strides=(2,2), padding='same')(merge) #16x16x128
@@ -249,6 +250,9 @@ def define_gan(g_model, d_model):
 	# get image output from the generator model
 	gen_output = g_model.output  #32x32x3
     
+	print(gen_noise.dtype, gen_label.dtype)
+	# exit()
+
 	#2. pass fake image and class label through discriminator model to get the generator error signal
 	# generator image output and corresponding input label are inputs to discriminator
 	gan_output = d_model([gen_output, gen_label])
@@ -315,6 +319,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 	images = generator.predict([z_input, labels_input])
 	# create class labels
 	y = zeros((n_samples, 1))  #Label=0 indicating they are fake
+
 	return [images, labels_input], y
 
 # train the generator and discriminator
@@ -364,6 +369,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
         # 1 as the output as it is adversarial and if generator did a great
         # job of fooling the discriminator then the output would be 1 (true)
 			# update the generator via the weight-frozen discriminator's error
+			print(z_input.dtype, labels_input.dtype, y_gan.dtype)
 			g_loss = gan_model.train_on_batch([z_input, labels_input], y_gan)
 			# Print losses on this batch
 			print('Epoch>%d, Batch%d/%d, d1=%.3f, d2=%.3f d3=%.3f g=%.3f ' %
@@ -390,40 +396,40 @@ dataset = load_real_samples()
 # exit()
 ##########################################################
 # Now, let us load the generator model and generate images
-# Lod the trained model and generate a few images
-from numpy import asarray
-from numpy.random import randn
-from numpy.random import randint
-from keras.models import load_model
-import numpy as np
-# 
+# # Lod the trained model and generate a few images
+# from numpy import asarray
+# from numpy.random import randn
+# from numpy.random import randint
+# from keras.models import load_model
+# import numpy as np
+# # 
 
-#Note: CIFAR10 classes are: airplane, automobile, bird, cat, deer, dog, frog, horse,
-# ship, truck
+# #Note: CIFAR10 classes are: airplane, automobile, bird, cat, deer, dog, frog, horse,
+# # ship, truck
 
-# load model
-model = load_model('generator_weights\\cifar_conditional_generator_2epochs.h5')
+# # load model
+# model = load_model('generator_weights\\cifar_conditional_generator_2epochs.h5')
 
-# generate multiple images
+# # generate multiple images
 
-latent_points, labels = generate_latent_points(100, 100)
-# specify labels - generate 10 sets of labels each gping from 0 to 9
-labels = asarray([x for _ in range(10) for x in range(10)])
-# generate images
-X  = model.predict([latent_points, labels])
-# scale from [-1,1] to [0,1]
-X = (X + 1) / 2.0
-X = (X*255).astype(np.uint8)
-# plot the result (10 sets of images, all images in a column should be of same class in the plot)
-# Plot generated images 
-def show_plot(examples, n):
-	for i in range(n * n):
-		plt.subplot(n, n, 1 + i)
-		plt.axis('off')
-		plt.imshow(examples[i, :, :, :])
-	plt.show()
+# latent_points, labels = generate_latent_points(100, 100)
+# # specify labels - generate 10 sets of labels each gping from 0 to 9
+# labels = asarray([x for _ in range(10) for x in range(10)])
+# # generate images
+# X  = model.predict([latent_points, labels])
+# # scale from [-1,1] to [0,1]
+# X = (X + 1) / 2.0
+# X = (X*255).astype(np.uint8)
+# # plot the result (10 sets of images, all images in a column should be of same class in the plot)
+# # Plot generated images 
+# def show_plot(examples, n):
+# 	for i in range(n * n):
+# 		plt.subplot(n, n, 1 + i)
+# 		plt.axis('off')
+# 		plt.imshow(examples[i, :, :, :])
+# 	plt.show()
     
-show_plot(X, 3)
+# show_plot(X, 3)
 
 
 
