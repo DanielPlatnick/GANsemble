@@ -1,7 +1,9 @@
 import os
 import numpy as np
+import platform
 from PIL import Image
 from tqdm import tqdm
+import tensorflow as tf
 from numpy import zeros
 from numpy import ones
 from numpy.random import randn
@@ -21,83 +23,100 @@ from keras.layers import Concatenate
 from matplotlib import pyplot as plt
 from keras.datasets.cifar10 import load_data
 from sklearn.model_selection import train_test_split
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 
 
+print("TensorFlow version:", tf.__version__)
+print("TensorFlow is installed at:", tf.__file__)
+# d = 'C:\Users\Owner\Desktop\microplastics_data_generation_private\\tf-gpu-env'
+# exit()
+CUDA_VISIBLE_DEVICES=1
 (trainX, trainy), (testX, testy) = load_data()
 print(trainX.shape, trainy.shape)
 print(testX.shape, testy.shape)
 print(type(trainX[0]))
 print(testy[0], testy[-1])
 
+os_name = platform.system()
+print(os_name)
+if tf.test.is_gpu_available(cuda_only=False, min_cuda_compute_capability=None):
+    print('GPU device is available.')
+else:
+    print('GPU device is not available.')
 
-gan_data_dir = "C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_dataset\\"
-
+# Alternatively, you can use this code to list all available GPUs
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# Check if it's Windows
+if os_name == 'Windows':
+	gan_data_dir = "C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_dataset\\"
+elif os_name == 'Darwin':
+	gan_data_dir = "data_processing/gan_dataset/"
+else:
+	print(f"Unknown operating system: {os_name}")
+	exit()
 
 def load_gan_training_data(data_dir, image_size=(32,32), test_split=0.2):
 	
-    images = []
-    labels = []
-    class_folders = os.listdir(data_dir)
+	images = []
+	labels = []
+	class_folders = os.listdir(data_dir)
 
-    for class_index, class_folder in enumerate(class_folders):
-        class_path = os.path.join(data_dir, class_folder)
-        # print(class_index, class_path)
+	for class_index, class_folder in enumerate(class_folders):
+		class_path = os.path.join(data_dir, class_folder)
+		# print(class_index, class_path)
 
-        image_files = [f for f in os.listdir(class_path) if f.endswith('.png')]
+		image_files = [f for f in os.listdir(class_path) if f.endswith('.png')]
 
-        for image_file in image_files:
-            image_path = os.path.join(class_path, image_file)
+		for image_file in image_files:
+			image_path = os.path.join(class_path, image_file)
             # print(image_path)
-			
+		
+			image = Image.open(image_path)
+			image = image.resize(image_size)
+			image_array = np.array(image)
 
-            image = Image.open(image_path)
-            image = image.resize(image_size)
-            image_array = np.array(image)
 
-            # Normalize pixel values to the range [0, 1]
-            image_array = image_array / 255.0
 
-            # Append the image and its label to the lists
-            images.append(image_array)
-            labels.append(class_index)
+			images.append(image_array)
+			labels.append(class_index)
 
     # Convert lists to NumPy arrays
-    images = np.array(images)
-    labels = np.array(labels)
+	images = np.array(images)
+	labels = np.array(labels)
 
     # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=test_split, random_state=42)
+	X_train, X_test, y_train, y_test = train_test_split(images, labels, test_size=test_split, random_state=42)
+	y_test = y_test.reshape(-1,1)
+	y_train = y_train.reshape(-1,1)
 
-    return (X_train, y_train), (X_test, y_test)
+	return (X_train, y_train), (X_test, y_test)
 
 
 
 
 
-(trainX, trainy), (testX, testy) = load_gan_training_data(data_dir=gan_data_dir)
-testy = testy.reshape(-1,1)
-trainy = trainy.reshape(-1,1)
+(GAN_trainX, GAN_trainy), (GAN_testX, GAN_testy) = load_gan_training_data(data_dir=gan_data_dir, image_size=(32, 32))
 
-print(testy[0], testy[-1])
-print(trainX.shape, trainy.shape)
-print(testX.shape, testy.shape)
-# plot 5 images
-for i in range(5):
-	plt.subplot(1, 5, 1 + i)
-	plt.axis('off')
-	plt.imshow(trainX[i])
-plt.show()
+
+print(GAN_testy[0], GAN_testy[-1])
+print(GAN_trainX.shape, GAN_trainy.shape)
+print(GAN_testX.shape, GAN_testy.shape)
+# # plot 5 images
+# for i in range(5):
+# 	plt.subplot(1, 5, 1 + i)
+# 	plt.axis('off')
+# 	plt.imshow(GAN_trainX[i])
+# plt.show()
 
 
 
 
 
 # Example usage
-data_dir = "C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_dataset"
+print(gan_data_dir)
 
 
-
-exit()
 #############################################################################
 #Define generator, discriminator, gan and other helper functions
 #We will use functional way of defining model as we have multiple inputs; 
@@ -148,7 +167,7 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10):
     ##Combine input label with input image and supply as inputs to the model. 
 	model = Model([in_image, in_label], out_layer)
 	# compile model
-	opt = Adam(lr=0.0002, beta_1=0.5)
+	opt = Adam(learning_rate=0.0002, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 	return model
 
@@ -177,6 +196,10 @@ def define_generator(latent_dim, n_classes=10):
 	# image generator input
 	in_lat = Input(shape=(latent_dim,))  #Input of dimension 100
     
+
+	# vector starts as the size which is 2 factorsof2 smaller than the input images     (factors of 2 are based on 2 convolutional layers of stride length 2)
+
+
 	# foundation for 8x8 image
     # We will reshape input latent vector into 8x8 image as a starting point. 
     #So n_nodes for the Dense layer can be 128x8x8 so when we reshape the output 
@@ -204,7 +227,6 @@ def define_generator(latent_dim, n_classes=10):
 test_gen = define_generator(100, n_classes=10)
 print(test_gen.summary())
 
-
 # #Generator is trained via GAN combined model. 
 # define the combined generator and discriminator model, for updating the generator
 #Discriminator is trained separately so here only generator will be trained by keeping
@@ -213,11 +235,14 @@ def define_gan(g_model, d_model):
 	d_model.trainable = False  #Discriminator is trained separately. So set to not trainable.
     
     ## connect generator and discriminator...
+
+	#1. pass noise and label through generator and generate fake image
 	# first, get noise and label inputs from generator model
 	gen_noise, gen_label = g_model.input  #Latent vector size and label size
 	# get image output from the generator model
 	gen_output = g_model.output  #32x32x3
     
+	#2. pass fake image and class label through discriminator model to get the generator error signal
 	# generator image output and corresponding input label are inputs to discriminator
 	gan_output = d_model([gen_output, gen_label])
 	# define gan model as taking noise and label and outputting a classification
@@ -229,12 +254,18 @@ def define_gan(g_model, d_model):
 
 # load cifar images
 def load_real_samples():
-	# load dataset
+
 	(trainX, trainy), (_, _) = load_data()   #cifar
+	# (trainX, trainy), (_, _) = load_gan_training_data(data_dir=gan_data_dir, image_size=(32, 32))
+
+	
 	# convert to floats and scale
 	X = trainX.astype('float32')
-	# scale from [0,255] to [-1,1]
+	# normalize from [0,255] to [-1,1]
 	X = (X - 127.5) / 127.5   #Generator uses tanh activation so rescale 
+
+	# Normalize pixel values to the range [0, 1]
+	# image_array = image_array / 255.0
                             #original images to -1 to 1 to match the output of generator.
 	return [X, trainy]
 
@@ -254,6 +285,8 @@ def generate_real_samples(dataset, n_samples):
 	y = ones((n_samples, 1))  #Label=1 indicating they are real
 	return [X, labels], y
 
+
+  # generates random noise of latent vect dims as well as a random class label
 # generate points in latent space as input for the generator
 def generate_latent_points(latent_dim, n_samples, n_classes=10):
 	# generate points in the latent space
@@ -292,8 +325,8 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 		for j in range(bat_per_epo):
 			
              # Train the discriminator on real and fake images, separately (half batch each)
-        #Research showed that separate training is more effective. 
-			# get randomly selected 'real' samples
+        # separate training is more effective
+			
             # get randomly selected 'real' samples
 			[X_real, labels_real], y_real = generate_real_samples(dataset, half_batch)
 
@@ -307,7 +340,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 			# update discriminator model weights
 			d_loss_fake, _ = d_model.train_on_batch([X_fake, labels], y_fake)
             
-            #d_loss = 0.5 * np.add(d_loss_real, d_loss_fake) #Average loss if you want to report single..
+			d_loss = 0.5 * np.add(d_loss_real, d_loss_fake) #Average loss 
             
 			# prepare points in latent space as input for the generator
 			[z_input, labels_input] = generate_latent_points(latent_dim, n_batch)
@@ -320,15 +353,15 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 			y_gan = ones((n_batch, 1))
              # Generator is part of combined model where it got directly linked with the discriminator
         # Train the generator with latent_dim as x and 1 as y. 
-        # Again, 1 as the output as it is adversarial and if generator did a great
-        #job of folling the discriminator then the output would be 1 (true)
-			# update the generator via the discriminator's error
+        # 1 as the output as it is adversarial and if generator did a great
+        # job of fooling the discriminator then the output would be 1 (true)
+			# update the generator via the weight-frozen discriminator's error
 			g_loss = gan_model.train_on_batch([z_input, labels_input], y_gan)
 			# Print losses on this batch
-			print('Epoch>%d, Batch%d/%d, d1=%.3f, d2=%.3f g=%.3f' %
-				(i+1, j+1, bat_per_epo, d_loss_real, d_loss_fake, g_loss))
+			print('Epoch>%d, Batch%d/%d, d1=%.3f, d2=%.3f d3=%.3f g=%.3f ' %
+				(i+1, j+1, bat_per_epo, d_loss_real, d_loss_fake, d_loss, g_loss))
 	# save the generator model
-	g_model.save('cifar_conditional_generator_25epochs.h5')
+	g_model.save('generator_weights\\cifar_conditional_generator_25epochs.h5')
 
 #Train the GAN
 
@@ -343,8 +376,10 @@ gan_model = define_gan(g_model, d_model)
 # load image data
 dataset = load_real_samples()
 # train model
-train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=2)
+# train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=2)
 
+
+# exit()
 ##########################################################
 # Now, let us load the generator model and generate images
 # Lod the trained model and generate a few images
@@ -359,7 +394,7 @@ import numpy as np
 # ship, truck
 
 # load model
-model = load_model('cifar_conditional_generator_250epochs.h5')
+model = load_model('generator_weights\\cifar_conditional_generator_2epochs.h5')
 
 # generate multiple images
 
@@ -380,7 +415,7 @@ def show_plot(examples, n):
 		plt.imshow(examples[i, :, :, :])
 	plt.show()
     
-show_plot(X, 10)
+show_plot(X, 3)
 
 
 
