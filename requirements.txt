@@ -1,0 +1,7 @@
+cGAN tf gpu requirements:
+(simple) windows 11 through wsl and directml:
+-https://learn.microsoft.com/en-us/windows/ai/directml/gpu-tensorflow-wsl follow instructions from link
+-wsl
+-latest nvidia driver
+-conda
+
