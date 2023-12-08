@@ -318,7 +318,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 	return [images, labels_input], y
 
 # train the generator and discriminator
-#We loop through a number of epochs to train our Discriminator by first selecting
+# loop through a number of epochs to train our Discriminator by first selecting
 #a random batch of images from our true/real dataset.
 #Then, generating a set of images using the generator. 
 #Feed both set of images into the Discriminator. 
@@ -350,21 +350,12 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
             
 			d_loss = 0.5 * np.add(d_loss_real, d_loss_fake) #Average loss 
             
-			# prepare points in latent space as input for the generator
+			# prepare points from z
 			[z_input, labels_input] = generate_latent_points(latent_dim, n_batch)
             
-            # The generator wants the discriminator to label the generated samples
-        # as valid (ones)
-        #This is where the generator is trying to trick discriminator into believing
-        #the generated image is true (hence value of 1 for y)	
-			# create inverted labels for the fake samples
+			# genetators fake label as true
 			y_gan = ones((n_batch, 1))
-             # Generator is part of combined model where it got directly linked with the discriminator
-        # Train the generator with latent_dim as x and 1 as y. 
-        # 1 as the output as it is adversarial and if generator did a great
-        # job of fooling the discriminator then the output would be 1 (true)
-			# update the generator via the weight-frozen discriminator's error
-			# print(z_input.dtype, labels_input.dtype, y_gan.dtype)
+
 			g_loss = gan_model.train_on_batch([z_input, labels_input], y_gan)
 			# Print losses on this batch
 			print('Epoch>%d, Batch%d/%d, d_loss_real=%.3f, dloss_fake=%.3f d_loss=%.3f g_loss=%.3f ' %
@@ -375,7 +366,10 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	# base_directory = '/mnt/c/Users/Owner/Desktop/advanced_deep_learning/mp_tensorflow/private_cGANs_for_mp'
 	# save_path = os.path.join(base_directory, 'data_processing', 'generator_weights', 'TESTtf_cifar_cGAN_10epochs.h5')
 
-	g_model.save(f'tf_cGAN_{n_epochs}_epochs.h5')
+	g_model.save(f'tf_cGAN_gen_{n_epochs}_epochs.h5')
+
+	#added this code
+	# d_model.save(f'tf_cGAN_disc_{n_epochs}_epochs.h5')
 
 #Train the GAN
 
@@ -389,8 +383,12 @@ g_model = define_generator(latent_dim)
 gan_model = define_gan(g_model, d_model)
 # load image data
 dataset = load_real_samples()
+
+
+
+
 # train model
-# train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=1)
+train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=500)
 
 
 # exit()
@@ -406,32 +404,36 @@ import numpy as np
 # 
 
 #Note: CIFAR10 classes are: airplane, automobile, bird, cat, deer, dog, frog, horse,
-# ship, truck
+# # ship, truck
 
-# load model
-model = load_model('tf_cGAN_1_epochs.h5')
-model.compile
 
-# generate multiple images
 
-latent_points, labels = generate_latent_points(100, 100)
-# specify labels - generate 10 sets of labels each gping from 0 to 9
-labels = asarray([x for _ in range(10) for x in range(10)])
-# generate images
-X  = model.predict([latent_points, labels])
-# scale from [-1,1] to [0,1]
-X = (X + 1) / 2.0
-X = (X*255).astype(np.uint8)
-# plot the result (10 sets of images, all images in a column should be of same class in the plot)
-# Plot generated images 
-def show_plot(examples, n):
-	for i in range(n * n):
-		plt.subplot(n, n, 1 + i)
-		plt.axis('off')
-		plt.imshow(examples[i, :, :, :])
-	plt.show()
+# # uncomment here
+
+# # load model
+# model = load_model('tf_cGAN_gen_200_epochs.h5')
+# model.compile
+
+# # generate multiple images
+
+# latent_points, labels = generate_latent_points(100, 100)
+# # specify labels - generate 10 sets of labels each gping from 0 to 9
+# labels = asarray([x for _ in range(10) for x in range(10)])
+# # generate images
+# X  = model.predict([latent_points, labels])
+# # scale from [-1,1] to [0,1]
+# X = (X + 1) / 2.0
+# X = (X*255).astype(np.uint8)
+# # plot the result (10 sets of images, all images in a column should be of same class in the plot)
+# # Plot generated images 
+# def show_plot(examples, n):
+# 	for i in range(n * n):
+# 		plt.subplot(n, n, 1 + i)
+# 		plt.axis('off')
+# 		plt.imshow(examples[i, :, :, :])
+# 	plt.show()
     
-show_plot(X, 3)
+# show_plot(X, 10)
 
 
 
