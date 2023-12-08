@@ -354,7 +354,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	g_model.save(f'tf_MPcGAN_gen_128x128_{n_epochs}_epochs.h5')
 
 	#added this code
-	# d_model.save(f'tf_cGAN_disc_{n_epochs}_epochs.h5')
+	d_model.save(f'tf_MPcGAN_disc_128x128_{n_epochs}_epochs.h5')
 
 #Train the GAN
 
@@ -385,8 +385,8 @@ dataset = load_real_samples(mp_data=True, image_size=IMAGE_SIZE)
 
 
 # train model
-n_epochs = 100
-train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
+n_epochs = 150
+# train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
 
 
 
@@ -414,9 +414,9 @@ model.compile
 
 # generate 1 images
 # specify how many images to generate in second parameter of latent_points
-latent_points, label = generate_latent_points(100, 1)
+latent_points, labels = generate_latent_points(100, 100)
 label = asarray([5])
-X  = model.predict([latent_points, label])
+# X  = model.predict([latent_points, label])
 
 
 # latent_points, label = generate_latent_points(100, 100)
@@ -425,20 +425,21 @@ labels = asarray([x for _ in range(10) for x in range(10)])
 print(labels)
 
 # generate multiple images
-# X  = model.predict([latent_points, labels])
+X  = model.predict([latent_points, labels])
 # scale from [-1,1] to [0,1]
 X = (X + 1) / 2.0
 X = (X*255).astype(np.uint8)
-# plot the result (10 sets of images, all images in a column should be of same class in the plot)
-# Plot generated images 
-# def show_plot(examples, n):
-# 	for i in range(n * n):
-# 		plt.subplot(n, n, 1 + i)
-# 		plt.axis('off')
-# 		plt.imshow(examples[i, :, :, :])
-# 	plt.show()
+
+##### plot the result (10 sets of images, all images in a column should be of same class in the plot)
+##### Plot generated images 
+def show_plot(examples, n):
+	for i in range(n * n):
+		plt.subplot(n, n, 1 + i)
+		plt.axis('off')
+		plt.imshow(examples[i, :, :, :])
+	plt.show()
     
-# show_plot(X, 4)
+show_plot(X, 4)
 
 plt.imshow(X[0,:,:,:])
 plt.show()
