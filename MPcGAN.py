@@ -89,7 +89,7 @@ def load_gan_training_data(data_dir, image_size=(32,32), test_split=0.14):
 	return (X_train, y_train), (X_test, y_test)
 
  
-def define_discriminator(in_shape=(32,32,3), n_classes=10, lr=0.0002):
+def define_discriminator(in_shape=(32,32,3), n_classes=10, d_lr=0.0002):
 	
     # label input
 	in_label = Input(shape=(1,))  #Shape 1
@@ -133,7 +133,7 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10, lr=0.0002):
     ##Combine input label with input image and supply as inputs to the model. 
 	model = Model([in_image, in_label], out_layer)
 	# compile model
-	opt = Adam(learning_rate=lr, beta_1=0.5)
+	opt = Adam(learning_rate=d_lr, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 	return model
 
@@ -151,11 +151,16 @@ def define_generator(latent_dim, n_classes=10):
     #each label (total 10 classes for cifar), will be represented by a vector of size 50. 
 	li = Embedding(n_classes, 50)(in_label) #Shape 1,50
     
-	# linear multiplication
-	n_nodes = 8 * 8  # To match the dimensions for concatenation later in this step.  
-	li = Dense(n_nodes)(li) #1,64
-	# reshape to additional channel
-	li = Reshape((8, 8, 1))(li)
+	# # linear multiplication
+	# n_nodes = 8 * 8  # To match the dimensions for concatenation later in this step.  
+	# li = Dense(n_nodes)(li) #1,64
+	# # reshape to additional channel
+	# li = Reshape((8, 8, 1))(li)
+
+	# trying to use different sizes
+	n_nodes = 32 * 32 
+	li = Dense(n_nodes)(li) 
+	li = Reshape((32, 32, 1))(li)
     
     
 	# image generator input
@@ -171,11 +176,14 @@ def define_generator(latent_dim, n_classes=10):
     #it would be 8x8x128 and that can be slowly upscaled to 32x32 image for output.
     #Note that this part is same as unconditional GAN until the output layer. 
     #While defining model inputs we will combine input label and the latent input.
-	n_nodes = 128 * 8 * 8
+
+	# playing with number of nodes
+	# n_nodes = 128 * 8 * 8
+	n_nodes = 128 * 32 * 32
 
 	gen = Dense(n_nodes)(in_lat)  #shape=8192
 	gen = LeakyReLU(alpha=0.2)(gen)
-	gen = Reshape((8, 8, 128))(gen) #Shape=8x8x128
+	gen = Reshape((32, 32, 128))(gen) #Shape=8x8x128
 	# merge image gen and label input
 
 	merge = Concatenate()([gen, li])  #Shape=8x8x129 (Extra channel corresponds to the label)
@@ -196,7 +204,7 @@ print(test_gen.summary())
 
 
 	# generator gets trained through
-def define_gan(g_model, d_model, lr=0.002):
+def define_gan(g_model, d_model, g_lr=0.002):
 	d_model.trainable = False  #Discriminator is trained separately. So set to not trainable.
     
     ## connect generator and discriminator...
@@ -216,12 +224,12 @@ def define_gan(g_model, d_model, lr=0.002):
 	# define gan model as taking noise and label and outputting a classification
 	model = Model([gen_noise, gen_label], gan_output)
 	# compile model
-	opt = Adam(learning_rate=lr, beta_1=0.5)
+	opt = Adam(learning_rate=g_lr, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt)
 	return model
 
 # load cifar images
-def load_real_samples(mp_data=True):
+def load_real_samples(mp_data=True, image_size=(32,32)):
 
 	if mp_data == False:
 		(trainX, trainy), (_, _) = load_data()  
@@ -230,7 +238,7 @@ def load_real_samples(mp_data=True):
 
 	if mp_data == True:
 	
-		(trainX, trainy), (_, _) = load_gan_training_data(data_dir=gan_data_dir, image_size=(32, 32))
+		(trainX, trainy), (_, _) = load_gan_training_data(data_dir=gan_data_dir, image_size=image_size)
 		# print(trainX.shape, trainy.shape)
 		# print(trainy)
 		# print(max(trainy))
@@ -300,7 +308,7 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 #Finally, set the loss parameters for both the real and fake images, as well as the combined loss. 
 
 # previously set n_batch=128
-def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=256):
+def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=128):
 	bat_per_epo = int(dataset[0].shape[0] / n_batch)
 	half_batch = int(n_batch / 2)  #the discriminator model is updated for a half batch of real samples 
                             #and a half batch of fake samples, combined a single batch. 
@@ -343,7 +351,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	# base_directory = '/mnt/c/Users/Owner/Desktop/advanced_deep_learning/mp_tensorflow/private_cGANs_for_mp'
 	# save_path = os.path.join(base_directory, 'data_processing', 'generator_weights', 'TESTtf_cifar_cGAN_10epochs.h5')
 
-	g_model.save(f'tf_MPcGAN_gen_{n_epochs}_epochs.h5')
+	g_model.save(f'tf_MPcGAN_gen_128x128_{n_epochs}_epochs.h5')
 
 	#added this code
 	# d_model.save(f'tf_cGAN_disc_{n_epochs}_epochs.h5')
@@ -352,35 +360,36 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 
 
 
+# (GAN_trainX, GAN_trainy), (GAN_testX, GAN_testy) = load_gan_training_data(data_dir=gan_data_dir, image_size=IMAGE_SIZE)
 
 
-(GAN_trainX, GAN_trainy), (GAN_testX, GAN_testy) = load_gan_training_data(data_dir=gan_data_dir, image_size=(128, 128))
-
-
-print(GAN_testy[0], GAN_testy[-1])
-print(GAN_trainX.shape, GAN_trainy.shape)
-print(GAN_testX.shape, GAN_testy.shape)
-print(type(GAN_trainX))
+# print(GAN_testy[0], GAN_testy[-1])
+# print(GAN_trainX.shape, GAN_trainy.shape)
+# print(GAN_testX.shape, GAN_testy.shape)
+# print(type(GAN_trainX))
 
 # size of the latent space
 latent_dim = 100
 # create the discriminator
-d_model = define_discriminator()
+d_model = define_discriminator(in_shape=(128,128,3), n_classes=10, d_lr=0.0002)
 # create the generator
 g_model = define_generator(latent_dim)
 # create the gan
-gan_model = define_gan(g_model, d_model)
-# load image data
-dataset = load_real_samples(mp_data=True)
+gan_model = define_gan(g_model, d_model, g_lr=0.002)
 
+
+
+# load image data
+IMAGE_SIZE = (128,128)
+dataset = load_real_samples(mp_data=True, image_size=IMAGE_SIZE)
 
 
 # train model
-n_epochs = 500
-# train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
+n_epochs = 100
+train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
 
 
-# exit()
+
 
 
 
@@ -397,16 +406,16 @@ import numpy as np
 
 
 
-# uncomment here
+#### uncomment here
 
 # load model
-model = load_model(f'tf_MPcGAN_gen_{n_epochs}_epochs.h5')
+model = load_model(f'tf_MPcGAN_gen_128x128_{n_epochs}_epochs.h5')
 model.compile
 
 # generate 1 images
 # specify how many images to generate in second parameter of latent_points
 latent_points, label = generate_latent_points(100, 1)
-label = asarray([0])
+label = asarray([5])
 X  = model.predict([latent_points, label])
 
 
