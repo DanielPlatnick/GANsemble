@@ -4,25 +4,25 @@ import platform
 from PIL import Image
 from tqdm import tqdm
 import tensorflow as tf
-from numpy import zeros
 from numpy import ones
+from numpy import zeros
 from numpy.random import randn
 from numpy.random import randint
-from tensorflow.keras.optimizers import Adam
+from matplotlib import pyplot as plt
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import Reshape
 from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import Conv2DTranspose
-from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import Dropout
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.layers import Concatenate
-from matplotlib import pyplot as plt
-from tensorflow.keras.datasets.cifar10 import load_data
+from tensorflow.keras.layers import Conv2DTranspose
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.datasets.cifar10 import load_data
 
 os_name = platform.system()
 print(str(os.getcwd()))
