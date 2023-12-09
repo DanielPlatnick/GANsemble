@@ -1,6 +1,6 @@
+import os
 import shutil
 from build_augmented_data import *
-
 
 """
 Chosen dataset based on CNN combines with the original dataset to balance it and train cGAN
@@ -127,10 +127,21 @@ def generate_gan_baseline_dataset(gan_baseline_data_paths, gan_baseline_dataset_
             counter += 1
         
 
+def create_unbiased_eval_set(raw_data_dir, num_stratified_samples=2):
+    polar_dir = raw_data_dir + '\\polar\\'
+    polar_dir_list = os.listdir(polar_dir)
 
-
+    for class_path_list in range(len(polar_dir_list)):
+        polar_class_dir = polar_dir + polar_dir_list[class_path_list] + '\\'
+        print(polar_class_dir)
+        exit()
+    pass
 
 data_processing_dir = os.getcwd() + "\\data_processing\\"
+raw_data_dir = data_processing_dir + 'raw_data\\'
+create_unbiased_eval_set(raw_data_dir, 1)
+
+
 gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
 gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 
@@ -143,7 +154,7 @@ gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 print([len(x) for x in gan_baseline_dataset_paths])
 
-generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
+# generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
 dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
 
 for classdir in os.listdir(dir):

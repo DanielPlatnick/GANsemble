@@ -2,10 +2,11 @@ import os
 import platform
 import numpy as np
 import tensorflow as tf
+
 from PIL import Image
-from tqdm import tqdm
 from numpy import ones
 from numpy import zeros
+from numpy import asarray
 from numpy.random import randn
 from numpy.random import randint
 from matplotlib import pyplot as plt
@@ -19,6 +20,7 @@ from tensorflow.keras.layers import Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import Embedding
+from tensorflow.keras.models import load_model
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import Conv2DTranspose
 from sklearn.model_selection import train_test_split
@@ -34,12 +36,6 @@ print("TensorFlow is installed at:", tf.__file__)
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
-
-# (trainX, trainy), (testX, testy) = load_data()
-# print(trainX.shape, trainy.shape)
-# print(testX.shape, testy.shape)
-# print(type(trainX[0]))
-# print(testy[0], testy[-1])
 os_name = platform.system()
 # print(os_name)
 
@@ -96,11 +92,11 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10, d_lr=0.0002):
 	# print(in_label.shape)
 	# exit()
 	# embedding for categorical input
-    #each label (total 10 classes for cifar), will be represented by a vector of size 50. 
-    #This vector of size 50 will be learnt by the discriminator
+    # each label (total 10 classes for the microplastics dataset), will be represented by a vector of size 50
+    # the vector of size 50 will be learnt by the discriminator
 	li = Embedding(n_classes, 50)(in_label) #Shape 1,50
 	# print(li.shape)
-	# exit()
+
 	# scale up to image dimensions with linear activation
 	n_nodes = in_shape[0] * in_shape[1]  #32x32 = 1024. 
 	li = Dense(n_nodes)(li)  #Shape = 1, 1024
@@ -116,7 +112,7 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10, d_lr=0.0002):
 	merge = Concatenate()([in_image, li]) #32x32x4 (4 channels, 3 for image and the other for labels)
     
 	# downsample: This part is same as unconditional GAN upto the output layer.
-    #We will combine input label with input image and supply as inputs to the model. 
+    # combine input label with input image and supply as inputs to the model. 
 	fe = Conv2D(128, (3,3), strides=(2,2), padding='same')(merge) #16x16x128
 	fe = LeakyReLU(alpha=0.2)(fe)
 	# downsample
@@ -142,13 +138,13 @@ print(test_discr.summary())
 
 
 # define the standalone generator model
-#latent vector and label as inputs
+# latent vector and label as inputs
 def define_generator(latent_dim, n_classes=10):
     
 	# label input
 	in_label = Input(shape=(1,))  #Input of dimension 1
 	# embedding for categorical input
-    #each label (total 10 classes for cifar), will be represented by a vector of size 50. 
+    # each label (total 10 classes for cifar), will be represented by a vector of size 50. 
 	li = Embedding(n_classes, 50)(in_label) #Shape 1,50
     
 	# # linear multiplication
@@ -170,23 +166,16 @@ def define_generator(latent_dim, n_classes=10):
 	# vector starts as the size which is 2 factorsof2 smaller than the input images     (factors of 2 are based on 2 convolutional layers of stride length 2)
 
 
-	# foundation for 8x8 image
-    # We will reshape input latent vector into 8x8 image as a starting point. 
-    #So n_nodes for the Dense layer can be 128x8x8 so when we reshape the output 
-    #it would be 8x8x128 and that can be slowly upscaled to 32x32 image for output.
-    #Note that this part is same as unconditional GAN until the output layer. 
-    #While defining model inputs we will combine input label and the latent input.
-
 	# playing with number of nodes
 	# n_nodes = 128 * 8 * 8
 	n_nodes = 128 * 32 * 32
 
-	gen = Dense(n_nodes)(in_lat)  #shape=8192
+	gen = Dense(n_nodes)(in_lat)  #
 	gen = LeakyReLU(alpha=0.2)(gen)
-	gen = Reshape((32, 32, 128))(gen) #Shape=8x8x128
+	gen = Reshape((32, 32, 128))(gen) #Shape=32x32x128
 	# merge image gen and label input
 
-	merge = Concatenate()([gen, li])  #Shape=8x8x129 (Extra channel corresponds to the label)
+	merge = Concatenate()([gen, li])  #Shape=32x32x129 (Extra channel corresponds to the label)
 	# upsample to 16x16
 	gen = Conv2DTranspose(128, (4,4), strides=(2,2), padding='same')(merge) #16x16x128
 	gen = LeakyReLU(alpha=0.2)(gen)
@@ -197,7 +186,7 @@ def define_generator(latent_dim, n_classes=10):
 	out_layer = Conv2D(3, (8,8), activation='tanh', padding='same')(gen) #32x32x3
 	# define model
 	model = Model([in_lat, in_label], out_layer)
-	return model   #Model not compiled as it is not directly trained like the discriminator.
+	return model   # model not compiled as it is not directly trained like the discriminator
 
 test_gen = define_generator(100, n_classes=10)
 print(test_gen.summary())
@@ -223,9 +212,15 @@ def define_gan(g_model, d_model, g_lr=0.002):
 	gan_output = d_model([gen_output, gen_label])
 	# define gan model as taking noise and label and outputting a classification
 	model = Model([gen_noise, gen_label], gan_output)
-	# compile model
+
+	# if loaded_model == False:
+	# 	# compile model
 	opt = Adam(learning_rate=g_lr, beta_1=0.5)
 	model.compile(loss='binary_crossentropy', optimizer=opt)
+	# loading saved model
+	# if loaded_model == True:
+	# 	opt = Adam()
+	# 	model.compile(loss='binary_crossentropy', optimizer=opt)
 	return model
 
 # load cifar images
@@ -288,8 +283,8 @@ def generate_latent_points(latent_dim, n_samples, n_classes=10):
 	return [z_input, labels]
 
 # use the generator to generate n fake examples, with class labels
-#Supply the generator, latent_dim and number of samples as input.
-#Use the above latent point generator to generate latent points. 
+# Supply the generator, latent_dim and number of samples as input.
+# Use the above latent point generator to generate latent points. 
 def generate_fake_samples(generator, latent_dim, n_samples):
 	# generate points in latent space
 	z_input, labels_input = generate_latent_points(latent_dim, n_samples)
@@ -302,8 +297,8 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 
 # train the generator and discriminator
 # loop through a number of epochs to train our Discriminator by first selecting
-#a random batch of images from our true/real dataset.
-#Then, generating a set of images using the generator. 
+# a random batch of images from our true/real dataset.
+# Then, generating a set of images using the generator. 
 #Feed both set of images into the Discriminator. 
 #Finally, set the loss parameters for both the real and fake images, as well as the combined loss. 
 
@@ -351,10 +346,10 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 	# base_directory = '/mnt/c/Users/Owner/Desktop/advanced_deep_learning/mp_tensorflow/private_cGANs_for_mp'
 	# save_path = os.path.join(base_directory, 'data_processing', 'generator_weights', 'TESTtf_cifar_cGAN_10epochs.h5')
 
-	g_model.save(f'tf_MPcGAN_gen_128x128_{n_epochs}_epochs.h5')
+	g_model.save(f'gen_128x128_175-{n_epochs}_epochs.h5', include_optimizer=True)
 
 	#added this code
-	d_model.save(f'tf_MPcGAN_disc_128x128_{n_epochs}_epochs.h5')
+	d_model.save(f'disc_128x128_175-{n_epochs}_epochs.h5', include_optimizer=True)
 
 #Train the GAN
 
@@ -370,12 +365,20 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
 
 # size of the latent space
 latent_dim = 100
+# # create the discriminator
+# d_model = define_discriminator(in_shape=(128,128,3), n_classes=10, d_lr=0.0002)
+# # create the generator
+# g_model = define_generator(latent_dim)
+
+
+# USING LOADED MODEL
 # create the discriminator
-d_model = define_discriminator(in_shape=(128,128,3), n_classes=10, d_lr=0.0002)
+d_model = load_model('disc_128x128_175_epochs.h5')
+d_model.d_lr = 0.00023
 # create the generator
-g_model = define_generator(latent_dim)
-# create the gan
-gan_model = define_gan(g_model, d_model, g_lr=0.002)
+g_model = load_model('gen_128x128_175_epochs.h5')
+# create the gan										
+gan_model = define_gan(g_model, d_model, g_lr=0.000009)
 
 
 
@@ -385,8 +388,8 @@ dataset = load_real_samples(mp_data=True, image_size=IMAGE_SIZE)
 
 
 # train model
-n_epochs = 150
-# train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
+n_epochs = 100
+train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=n_epochs)
 
 
 
@@ -394,52 +397,42 @@ n_epochs = 150
 
 
 # Load the trained model and generate a few images
-from numpy import asarray
-from numpy.random import randn
-from numpy.random import randint
-from tensorflow.keras.models import load_model
-import numpy as np
-# 
-
-#Note: CIFAR10 classes are: airplane, automobile, bird, cat, deer, dog, frog, horse,
-# # ship, truck
-
-
 
 #### uncomment here
 
 # load model
-model = load_model(f'tf_MPcGAN_gen_128x128_{n_epochs}_epochs.h5')
+model = load_model(f'gen_128x128_175-{n_epochs}_epochs.h5')
 model.compile
 
 # generate 1 images
-# specify how many images to generate in second parameter of latent_points
-latent_points, labels = generate_latent_points(100, 100)
-label = asarray([5])
-# X  = model.predict([latent_points, label])
+latent_points, label = generate_latent_points(100, 5)
+label = asarray([0, 0, 0, 0, 0])
+print(label)
+X  = model.predict([latent_points, label])
 
-
-# latent_points, label = generate_latent_points(100, 100)
-# specify labels - generate 10 sets of labels each going from 0 to 9
+# generate 10 sets of labels each going from 0 to 9
+# latent_points, labels = generate_latent_points(100, 100)
 labels = asarray([x for _ in range(10) for x in range(10)])
 print(labels)
+# X  = model.predict([latent_points, labels])
+
 
 # generate multiple images
-X  = model.predict([latent_points, labels])
 # scale from [-1,1] to [0,1]
 X = (X + 1) / 2.0
 X = (X*255).astype(np.uint8)
 
 ##### plot the result (10 sets of images, all images in a column should be of same class in the plot)
 ##### Plot generated images 
-def show_plot(examples, n):
-	for i in range(n * n):
-		plt.subplot(n, n, 1 + i)
-		plt.axis('off')
-		plt.imshow(examples[i, :, :, :])
-	plt.show()
+# def show_plot(examples, n):
+# 	for i in range(n * n):
+# 		plt.subplot(n, n, 1 + i)
+# 		plt.axis('off')
+# 		plt.imshow(examples[i, :, :, :])s
+# 	plt.show()
     
-show_plot(X, 4)
+# show_plot(X, 4)
 
-plt.imshow(X[0,:,:,:])
-plt.show()
+for i in range(5):
+	plt.imshow(X[i,:,:,:])
+	plt.show()
