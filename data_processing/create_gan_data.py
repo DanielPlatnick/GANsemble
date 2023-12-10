@@ -157,25 +157,26 @@ def create_unbiased_eval_set(raw_data_dir, num_stratified_samples=2):
     return None
 
 
+data_processing_dir = os.getcwd() + "\\data_processing\\"
 
-# gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
-# gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
+gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
+gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 
-# gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
+gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 
-# gan_dataset_size = sum([len(x) for x in gan_dataset_paths])
-# print(gan_dataset_size)
+gan_dataset_size = sum([len(x) for x in gan_dataset_paths])
+print(gan_dataset_size)
 
-# generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
-# gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
-# print([len(x) for x in gan_baseline_dataset_paths])
+generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
+gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
+print([len(x) for x in gan_baseline_dataset_paths])
 
-# generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
-# dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
+generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
+dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
 
-# for classdir in os.listdir(dir):
-#     currdir = dir + classdir + '\\'
-#     print(currdir, len(os.listdir(currdir)))
+for classdir in os.listdir(dir):
+    currdir = dir + classdir + '\\'
+    print(currdir, len(os.listdir(currdir)))
 
 
 

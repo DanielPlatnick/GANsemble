@@ -8,10 +8,29 @@ Main file for GANsemble
 
 """
 
-
+# 1. create uncorrelated test dir for later
 data_processing_dir = os.getcwd() + "\\data_processing\\"
 raw_data_dir = data_processing_dir + 'raw_data\\'
 create_unbiased_eval_set(raw_data_dir, 2)
+
+
+
+# 2. build the augmented datasets
+# build_data(40, augment_strategy_list)
+
+
+# 3. build baseline 1: no augmentation with resampling to fix imbalance
+#    build baseline 2: imbalanced with no augmentation  -  just copy raw_data dir
+   
+
+# 4. run data_chooser_model to empirically choose the best augmentation strategy
+
+
+# 5. train MPcGAN on the top 3 augmented datasets 
+#    add generated training samples from MPcGAN to original data and see if can use it to improve the accuracy
+#    use a classifier to see how cGAN samples impacts performance:
+        #  experiment with cgan to generate samples in different ways
+
 
 
 
@@ -43,7 +62,3 @@ create_unbiased_eval_set(raw_data_dir, 2)
 #     print(i, comb)
 
 
-
-# Build the synthesized dataset
-
-# build_data(40, augment_strategy_list)

@@ -12,6 +12,10 @@ from itertools import combinations
 
 ''' Augmentation functions expect and return a numpy array '''
 
+# maybe add a horizontal stretching option
+
+# an option that randomly applies all of the other augmentation options
+
 # Data augmentation method 1 - Horizontal shifting and horizontal flipping
 def augment_strategy_1(raw_image):
     shift_value = random.randint(-270, 270)  # Change this to the number of pixels you want to shift the image
