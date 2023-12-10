@@ -23,7 +23,14 @@ create_unbiased_eval_set(raw_data_dir, 2)
 #    build baseline 2: imbalanced with no augmentation  -  just copy raw_data dir
    
 
-# 4. run data_chooser_model to empirically choose the best augmentation strategy
+   
+
+# 4. run data_chooser_model to empirically choose the best 3 augmentation strategy
+
+#  testing against baseline:
+#         data aug + cGAN samples
+#         only cGAN samples as data augmentation imbalance fix for classifier
+#         
 
 
 # 5. train MPcGAN on the top 3 augmented datasets 
@@ -31,7 +38,7 @@ create_unbiased_eval_set(raw_data_dir, 2)
 #    use a classifier to see how cGAN samples impacts performance:
         #  experiment with cgan to generate samples in different ways
 
-
+# 6. use a model 1: CNN and also a model 2: resnet to test the MPcGAN-aided synthetic datasets versus baseline methods such as resampling as well as no resampling and no augmentation
 
 
 
