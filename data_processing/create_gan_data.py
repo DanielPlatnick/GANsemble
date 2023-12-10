@@ -128,22 +128,38 @@ def generate_gan_baseline_dataset(gan_baseline_data_paths, gan_baseline_dataset_
         
 
 def create_unbiased_eval_set(raw_data_dir, num_stratified_samples=2):
-    polar_dir = raw_data_dir + '\\polar\\'
-    polar_dir_list = os.listdir(polar_dir)
+    polar_dir = raw_data_dir + 'polar\\'
+    raw_origin = os.getcwd() + '\\data_processing\\raw_data_origin'
+    print(raw_origin)
+    class_dir_list = os.listdir(polar_dir)
 
-    for class_path_list in range(len(polar_dir_list)):
-        polar_class_dir = polar_dir + polar_dir_list[class_path_list] + '\\'
-        print(polar_class_dir)
-        exit()
-    pass
+    if not os.path.exists(raw_data_dir): shutil.copy(raw_origin, raw_data_dir)
+    eval_dir = os.getcwd() + '\\data_processing\\evaluation_set'
+    if not os.path.exists(eval_dir): os.mkdir(eval_dir)
 
-data_processing_dir = os.getcwd() + "\\data_processing\\"
-raw_data_dir = data_processing_dir + 'raw_data\\'
-create_unbiased_eval_set(raw_data_dir, 1)
+    for class_path_list in range(3):
+        class_dir = polar_dir + class_dir_list[class_path_list] + '\\'
+
+        eval_class_dir = eval_dir + '\\' + class_dir_list[class_path_list]
+        if not os.path.exists(eval_class_dir): os.mkdir(eval_class_dir)
+
+        sample_list = os.listdir(class_dir)
+        print(class_dir)
+        for _ in range(num_stratified_samples):
+            print(sample_list)
+            sample = random.choice(sample_list)
+            sample_list.remove(sample)
+            sample_path = class_dir + sample
+            print(sample_path)
+            target_path = eval_class_dir + '\\' + sample
+            shutil.move(sample_path, target_path)
+    
+    return None
 
 
-gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
-gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
+
+# gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
+# gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 
 # gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
 
@@ -151,15 +167,15 @@ gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 # print(gan_dataset_size)
 
 # generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
-gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
-print([len(x) for x in gan_baseline_dataset_paths])
+# gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
+# print([len(x) for x in gan_baseline_dataset_paths])
 
 # generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
-dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
+# dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
 
-for classdir in os.listdir(dir):
-    currdir = dir + classdir + '\\'
-    print(currdir, len(os.listdir(currdir)))
+# for classdir in os.listdir(dir):
+#     currdir = dir + classdir + '\\'
+#     print(currdir, len(os.listdir(currdir)))
 
 
 
