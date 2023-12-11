@@ -5,25 +5,32 @@ from create_gan_data import *
 
 """ 
 Main file for GANsemble 
-
 """
 
+# success
 # 1. create uncorrelated test dir for later
-data_processing_dir = os.getcwd() + "\\data_processing\\"
-raw_data_dir = data_processing_dir + 'raw_data\\'
-create_unbiased_eval_set(raw_data_dir, 2)
+# data_processing_dir = os.getcwd() + "\\data_processing\\"
+# raw_data_dir = data_processing_dir + 'raw_data\\'
+# create_unbiased_eval_set(raw_data_dir, 2)
 
 
-
+# need to update data augmentation types
 # 2. build the augmented datasets
-# build_data(40, augment_strategy_list)
+# combos = combine_augment_strategies()
+# combos = [strat_combos for strat_combos in combos]
+# augment_strategy_list = combos
+# for i, comb in enumerate(combos):
+#     print(i, comb)
+
+
+# build_data(30, augment_strategy_list)
 
 
 # 3. build baseline 1: no augmentation with resampling to fix imbalance
 #    build baseline 2: imbalanced with no augmentation  -  just copy raw_data dir
    
 
-   
+
 
 # 4. run data_chooser_model to empirically choose the best 3 augmentation strategy
 

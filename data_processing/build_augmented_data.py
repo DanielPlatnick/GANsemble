@@ -73,13 +73,12 @@ def create_charts():
     plt.imshow(testing_image)
     plt.show()
 
-
 def build_data(num_samples_needed, augment_strategy_list):
-    raw_data_dir = os.getcwd() + '\\raw_data\\'
+    raw_data_dir = os.getcwd() + '\\data_processing\\raw_data\\'
     polar_data_dir = raw_data_dir + 'polar\\'
 
-    aug_data_folder = os.getcwd() + '\\augmented_datasets\\'
-    augmented_data_dir = os.getcwd() + f'\\augmented_datasets\\aug_data_{num_samples_needed}_samples\\'
+    aug_data_folder = os.getcwd() + '\\data_processing\\augmented_datasets\\'
+    augmented_data_dir = os.getcwd() + f'\\data_processing\\augmented_datasets\\aug_data_{num_samples_needed}_samples\\'
     if not os.path.exists(aug_data_folder): os.mkdir(aug_data_folder)
     if not os.path.exists(augmented_data_dir): os.mkdir(augmented_data_dir)
 
