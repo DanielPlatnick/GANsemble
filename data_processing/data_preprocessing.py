@@ -28,7 +28,7 @@ def augment_strategy_1(raw_image):
     return augmented_image
 
 
-# Data augmentation method 2 - Varying elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4]
+# Data augmentation method 2 - Varying elastic deformation and random rotation      Note: values started a=50 s=5  --> a-[15,50] s->[2.5,4] blur and smoothness
 def augment_strategy_2(raw_image, random_state=None, border=30, alpha_range=[10,23], sigma_range=[2.8,3.82]):
 
     assert len(raw_image.shape) == 3

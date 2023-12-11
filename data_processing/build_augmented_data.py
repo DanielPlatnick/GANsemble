@@ -174,7 +174,7 @@ def build_data(num_samples_needed, augment_strategy_list):
                         print(random_sample_path)
 
             print("Total samples generated:", num_samples_generated)
-            print(f'Number sampled synthesizes: {num_samples_generated}, Number samples needed: {num_samples_needed}, class_dir')
+            print(f'Number samples synthesized: {num_samples_generated}, Number samples needed: {num_samples_needed}, class_dir')
             
         # this break leads to only generating 1 strategy based dataset on the first strategy
         # break        

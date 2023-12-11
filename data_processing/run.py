@@ -7,23 +7,26 @@ from create_gan_data import *
 Main file for GANsemble 
 """
 
-# success
-# 1. create uncorrelated test dir for later
-# data_processing_dir = os.getcwd() + "\\data_processing\\"
-# raw_data_dir = data_processing_dir + 'raw_data\\'
+## success
+## 1. create uncorrelated test dir for later
+data_processing_dir = os.getcwd() + "\\data_processing\\"
+raw_data_dir = data_processing_dir + 'raw_data\\'
 # create_unbiased_eval_set(raw_data_dir, 2)
 
 
-# need to update data augmentation types
-# 2. build the augmented datasets
+## need to update data augmentation types
+## 2. build the augmented datasets
 # combos = combine_augment_strategies()
 # combos = [strat_combos for strat_combos in combos]
-# augment_strategy_list = combos
+# augment_strategy_list = [combos[0],combos[3]]
 # for i, comb in enumerate(combos):
 #     print(i, comb)
 
+# print(augment_strategy_list, combos)
 
-# build_data(30, augment_strategy_list)
+
+
+# build_data(50, augment_strategy_list)
 
 
 # 3. build baseline 1: no augmentation with resampling to fix imbalance

@@ -1,18 +1,25 @@
 from build_augmented_data import *
-import os
+
 from PIL import Image
 from tqdm import tqdm
-import torch
-import torch.nn as nn
-import torchvision
-import torch.nn.functional as F
-import torch.optim as optim
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
-import torchvision.transforms as transforms
-import torchvision.models as models
 from torch.optim.lr_scheduler import StepLR
+from sklearn.metrics import precision_score, recall_score
+
+import os
+import pickle
+import torch
+import torchvision
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+import torchvision.models as models
+import torchvision.transforms as transforms
+
+
+
 
 # IF SOME WEIRD ERROR STARTS OCCURING WITH DIRS THAT WONT GO AWAY THEN MAYBE ITS BECAUSE U   PLACED SOMETHING SOMEEWHERE
 # Image dimensions: (1167, 875)
@@ -88,7 +95,7 @@ class SyntheticDataChooser_CNN(nn.Module):
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 70*70, 256)
+        self.fc1 = nn.Linear(16 * 58*58, 256)
         self.fc2 = nn.Linear(256, 84)
         self.fc3 = nn.Linear(84, 10)
         self.dropout = nn.Dropout(dropout_rate)
@@ -109,23 +116,24 @@ class SyntheticDataChooser_CNN(nn.Module):
         # print(x.size())
         # exit()
         return x
-    # def forward(self, x):
-        # print(x.size())
-        # x = self.pool(F.relu(self.conv1(x)))
-        # print(x.size())
-        # x = self.pool(F.relu(self.conv2(x)))
-        # print(x.size())
-        # x = torch.flatten(x, 1) # flatten all dimensions except batch
-        # print(x.size())
-        # x = F.relu(self.fc1(x))
-        # print(x.size())
-        # x = F.relu(self.fc2(x))
-        # print(x.size())
-        # x = self.fc3(x)
-        # print(x.size())
-        # # exit()
-        # return x
 
+    ## this code is for inspecting the dimensions at each layer during the forward pass of the network    
+    # def forward(self, x):
+    #     print(x.size())
+    #     x = self.pool(F.relu(self.conv1(x)))
+    #     print(x.size())
+    #     x = self.pool(F.relu(self.conv2(x)))
+    #     print(x.size())
+    #     x = torch.flatten(x, 1) # flatten all dimensions except batch
+    #     print(x.size())
+    #     x = F.relu(self.fc1(x))
+    #     print(x.size())
+    #     x = F.relu(self.fc2(x))
+    #     print(x.size())
+    #     x = self.fc3(x)
+    #     print(x.size())
+    #     # exit()
+    #     return x
 
 
 
@@ -141,7 +149,71 @@ class SyntheticDataChooser_ResNet50(nn.Module):
         x = self.resnet(x)
         return x
 
+
+
+def get_accuracy(test_loader):
+    total = 0
+    correct = 0
+    with torch.no_grad():
+        for data in test_loader:
+            images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    print(correct, total)
+    accuracy = (100*correct//total)/100
+    print(f'Accuracy of the network on the {len(test_dataset)} test images: {accuracy}')
+
+    return accuracy
+
+
+def get_precision(test_loader):
+    all_labels = []
+    all_predictions = []
+    with torch.no_grad():
+        for data in test_loader:
+            images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+
+            _, predicted = torch.max(outputs.data, 1)
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
+
+    precision = precision_score(all_labels, all_predictions, average='macro', zero_division=0)
+    print(f'Precision of the network on the {len(test_dataset)} test images: {precision}')
+
+    return precision
+
+
+def get_recall(test_loader):
+    all_labels = []
+    all_predictions = []
+    with torch.no_grad():
+        for data in test_loader:
+            images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
+
+            outputs = model(images)
+
+            _, predicted = torch.max(outputs.data, 1)
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
+
+    recall = recall_score(all_labels, all_predictions, average='macro', zero_division=0)
+    print(f'Recall of the network on the {len(test_dataset)} test images: {recall}')
+
+    return recall
     
+
 def imshow(img):
     if isinstance(img, torch.Tensor):
         # If input is a PyTorch tensor
@@ -155,246 +227,281 @@ def imshow(img):
         plt.imshow(img)
         plt.show()
 
-# image dimensions are 865x1167 pixels with 3 channels
-model = SyntheticDataChooser_CNN()
-# model = SyntheticDataChooser_ResNet50(pretrained=True)
-height = 875
-# pad to (3,1180,1180)
-width = 1167
-
-# transforms.RandomCrop(512,512),transforms.Resize((244, 244)),
-# Normalizing the images
-
-#resnet
-transform = transforms.Compose(
-    [transforms.ToTensor(), transforms.Pad((6,153,7,152), fill=255), transforms.Resize((244,244)), 
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-# transform = transforms.Compose(
-#     [transforms.ToTensor(), transforms.Pad((6,153,7,152), fill=255), transforms.Resize((295,295)), 
-#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-
-AUG_STRAT = 1
-data_processing_dir = os.getcwd() + '\\data_processing\\'
-
-training_dir = data_processing_dir + f'augmented_datasets\\aug_data_30_samples\\aug_strategy_{AUG_STRAT}'
-test_dir = data_processing_dir + 'raw_data\\polar'
-aug_models_dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\models'
-current_model = training_dir.split('\\')[-1]
-model_weights_path = f'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\models\\{current_model}.pth'
-
-train_dataset = Microplastics_Dataset(root_dir=training_dir, transform=transform)
-test_dataset = Microplastics_Dataset(root_dir=test_dir, transform=transform)
-acc_list = []
-
-# AUG_STRAT+=1
-batch_size = 4
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-classes = tuple([class_dir for class_dir in os.listdir(training_dir)])
-print(classes)
-
-num_classes = len(train_dataset.classes)
-# print(model)
-# Image dimensions: (1167, 875)
-# Define loss function and optimizer
-dataiter = iter(train_loader)
-images, labels = next(dataiter)
-
-# ## show images
-# imshow(torchvision.utils.make_grid(images))
-# print(labels)
-# print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
-
-
-# # Display the first image
-# first_image.show()
-
-# # Print the dimensions of the first image
-# print("Image dimensions:", first_image.size)
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=0.00051, momentum=0.9)
-
-print(torch.cuda.is_available())
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = model.to(device)
-
-# for param in model.parameters():
-#     print(param.device)
 
 
 
 
-# Training loop
-num_epochs = 50
-# model.load_state_dict(torch.load(model_weights_path))
 
 
-for epoch in tqdm(range(num_epochs), desc='Epochs', unit='epoch'):
-    running_loss = 0.0
-    tqdm_train_loader = tqdm(train_loader, desc=f'Epoch {epoch + 1}/{num_epochs}', unit='batch')
-    # Use tqdm to create a loading bar for the inner loop
-    for i, data in enumerate(tqdm_train_loader, 0):
-        if SyntheticDataChooser_ResNet50:
-            if model.pretrained == True:
-                        # Freeze all layers
-                for param in model.resnet.parameters():
-                    param.requires_grad = False
 
-                # Unfreeze the last fully connected layer
-                for param in model.resnet.fc.parameters():
-                    param.requires_grad = True
+metrics_list = []
 
-                if epoch >= 15:
+model_list = ['CNN', 'Resnet50_base', 'Resnet50_pretrained']
+sample_size_list = [10]
+num_epochs = 150
+
+## using a large batch size for more accurate gradient updates considering the small dataset size
+
+
+
+# using aug strats 1 and 4 for base study
+
+for curr_sample_size in sample_size_list:
+
+    if curr_sample_size == 10: batch_size = 64
+    else: batch_size = 4
+
+
+    AUG_STRAT = 1
+    CURR_NUM_SAMPLES = curr_sample_size
+    CURR_MODEL = model_list[0]
+
+    data_processing_dir = os.getcwd() + '\\data_processing\\'
+
+    training_dir = data_processing_dir + f'augmented_datasets\\aug_data_{CURR_NUM_SAMPLES}_samples\\aug_strategy_{AUG_STRAT}\\'
+    test_dir = data_processing_dir + 'evaluation_set\\'
+
+    # setting weight storage
+    aug_models_dir = f'info_data_chooser\\{CURR_MODEL}\\weights_data_chooser\\'
+    if not os.path.exists(aug_models_dir): os.mkdir(aug_models_dir)
+    current_model = training_dir.split('\\')[-2]
+
+
+    model_weights_path = aug_models_dir + f'\\{current_model}_{CURR_NUM_SAMPLES}_{num_epochs}epochs.pth'
+
+    # setting acc, precision, recall storage
+    aug_performance_dir = f'info_data_chooser\\{CURR_MODEL}\\acc_prec_recall\\'
+    if not os.path.exists(aug_performance_dir): os.mkdir(aug_performance_dir)
+
+
+    # image dimensions are 865x1167 pixels with 3 channels
+    model = SyntheticDataChooser_CNN()
+    # model = SyntheticDataChooser_ResNet50(pretrained=False)
+
+    model_used = str(model)
+    model_used = model_used.split('(')[0]
+    height = 875
+    # pad to (3,1180,1180)
+    width = 1167
+
+
+    # transforms
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Pad((6,153,7,152), fill=255), transforms.Resize((244,244), antialias=True), 
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+    train_dataset = Microplastics_Dataset(root_dir=training_dir, transform=transform)
+    test_dataset = Microplastics_Dataset(root_dir=test_dir, transform=transform)
+
+
+
+    # print(training_dir)
+    # print(test_dir)
+    # print(aug_models_dir)
+    # print(model_weights_path)
+    # print(aug_performance_dir)
+
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    classes = tuple([class_dir for class_dir in os.listdir(training_dir)])
+    print(classes)
+
+    num_classes = len(train_dataset.classes)
+
+    ## verify model architecture
+    # print(model)
+
+
+
+    # Image dimensions: (1167, 875)
+    # show some images
+    # for i in range(2):
+    #     dataiter = iter(train_loader)
+    #     images, labels = next(dataiter)
+
+    # # ## show images
+    # imshow(torchvision.utils.make_grid(images))
+    # print(labels)
+    # print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
+
+    # # Display the first image
+    # first_image.show()
+
+    # # Print the dimensions of the first image
+    # print("Image dimensions:", first_image.size)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=0.00051, momentum=0.9)
+
+    print(torch.cuda.is_available())
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
+    # for param in model.parameters():
+    #     print(param.device)
+
+    ## optionally load model to continue training from checkpoint
+    #### model.load_state_dict(torch.load(model_weights_path))
+
+
+    ######## Training loop ########
+    ## specified epochs at top for pathing
+    # num_epochs = x
+
+    for epoch in tqdm(range(num_epochs), desc='Epochs', unit='epoch'):
+        running_loss = 0.0
+        tqdm_train_loader = tqdm(train_loader, desc=f'Epoch {epoch + 1}/{num_epochs}', unit='batch')
+        # Use tqdm to create a loading bar for the inner loop
+        for i, data in enumerate(tqdm_train_loader, 0):
+            if model_used == 'SyntheticDataChooser_ResNet50':
+                if model.pretrained == True:
+                            # Freeze all layers
                     for param in model.resnet.parameters():
+                        param.requires_grad = False
+
+                    # Unfreeze the last fully connected layer
+                    for param in model.resnet.fc.parameters():
                         param.requires_grad = True
-            else:
-                pass
 
-        inputs, labels = data
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+                    if epoch >= 15:
+                        for param in model.resnet.parameters():
+                            param.requires_grad = True
+                else:
+                    pass
 
-        running_loss += loss.item()
-        tqdm_train_loader.set_postfix(loss=running_loss / (i + 1))
+            inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-    # Print the average loss for the epoch
-    average_loss = running_loss / len(train_loader)
-    print(f'Epoch {epoch + 1}, Average Loss: {average_loss:.3f}')
-# Save the trained model
+            running_loss += loss.item()
+            tqdm_train_loader.set_postfix(loss=running_loss / (i + 1))
 
-torch.save(model.state_dict(), model_weights_path)
+        # Print the average loss for the epoch
+        average_loss = running_loss / len(train_loader)
+        print(f'Epoch {epoch + 1}, Average Loss: {average_loss:.3f}')
 
-
-# # exit('model trained')
-
-
-
-# Iterate through the test dataset
-for index in range(len(test_dataset)):
-    image, label = test_dataset[index]
+    # Save the trained model
+    torch.save(model.state_dict(), model_weights_path)
 
 
-# Initialize the model
-dataiter = iter(test_loader)
-images, labels = next(dataiter)
-images = images.to(device)
-labels = labels.to(device)
+    # # exit('model trained')
 
 
 
-model.load_state_dict(torch.load(model_weights_path))
-
-model.eval()
-
-outputs = model(images)
-outputs.to(device)
-
-
-# # print images
-# imshow(torchvision.utils.make_grid(images))
-# print('GroundTruth: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
+    # # Print some information to verify correctness
+    # # print("Number of classes:", len(train_dataset.classes))
+    # # print("Class names:", train_dataset.classes)
+    # # print("Class to index mapping:", train_dataset.class_to_idx)
+    print("Number of samples in training dataset:", len(train_dataset))
+    print("Number of samples in test dataset:", len(test_dataset))
 
 
-_, predicted = torch.max(outputs, 1)
-
-print('Predicted: ', ' '.join(f'{classes[predicted[j]]:5s}'
-                            for j in range(4)))
-
-
-correct = 0
-total = 0
-
-with torch.no_grad():
-    for data in test_loader:
-        images, labels = data
-        images = images.to(device)
-        labels = labels.to(device)
-
-        outputs = model(images)
-
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-print(correct, total)
-print(f'Accuracy of the network on the 210 test images: {100 * correct // total} %')
+    # Iterate through the test dataset
+    for index in range(len(test_dataset)):
+        image, label = test_dataset[index]
 
 
-correct_pred = {classname: 0 for classname in classes}
-total_pred = {classname: 0 for classname in classes}
-
-# again no gradients needed
-with torch.no_grad():
-    for data in test_loader:
-        images, labels = data
-        images = images.to(device)
-        labels = labels.to(device)
-        outputs = model(images)
-        _, predictions = torch.max(outputs, 1)
-        # collect the correct predictions for each class
-        for label, prediction in zip(labels, predictions):
-            if label == prediction:
-                correct_pred[classes[label]] += 1
-            total_pred[classes[label]] += 1
+    # Initialize the model
+    dataiter = iter(test_loader)
+    images, labels = next(dataiter)
+    images = images.to(device)
+    labels = labels.to(device)
 
 
-# print accuracy for each class
-for classname, correct_count in correct_pred.items():
-    accuracy = 100 * float(correct_count) / total_pred[classname]
-    print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
 
-acc_list.append((AUG_STRAT, accuracy))
-print(acc_list)
-# # Print some information to verify correctness
-# print("Number of classes:", len(train_dataset.classes))
-# print("Class names:", train_dataset.classes)
-# print("Class to index mapping:", train_dataset.class_to_idx)
-# print("Number of samples in training dataset:", len(train_dataset))
-# print("Number of samples in test dataset:", len(test_dataset))
+    model.load_state_dict(torch.load(model_weights_path))
+
+    model.eval()
+
+    outputs = model(images)
+    outputs.to(device)
 
 
-model.eval()
-
-# Iterate through the test dataset
-for index in range(5): 
-    image, label = test_dataset[index]
-    image = image.unsqueeze(0)  # Add a batch dimension
-
-    # Move the data to the GPU if available
-    image = image.to(device)
-
-    # Forward pass
-    with torch.no_grad():
-        output = model(image)
-
-    # Get the predicted label
-    _, predicted = torch.max(output, 1)
-
-    # Print the ground truth and predicted labels
-    print(f'Example {index + 1}: Ground Truth - {classes[label]}, Predicted - {classes[predicted.item()]}')
+    # # print images
+    # imshow(torchvision.utils.make_grid(images))
+    # print('GroundTruth: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
 
 
-# for index in range(50):
-#     image, label = test_dataset[index]
-#     image = image.unsqueeze(0)  # Add a batch dimension
-#     image = image.to(device)
+    _, predicted = torch.max(outputs, 1)
 
-#     # Set the model to evaluation mode
-#     model.eval()
+    print('Predicted: ', ' '.join(f'{classes[predicted[j]]:5s}'
+                                for j in range(4)))
 
-#     # Forward pass
-#     with torch.no_grad():
-#         output = model(image)
-#         _, predicted = torch.max(output, 1)
 
-#     # Print results
-#     print(f'Example {index + 1}:')
-#     print(f'Ground Truth: {classes[label]}, Predicted: {classes[predicted.item()]}')
-#     print('---')
+    correct = 0
+    total = 0
+
+
+
+
+
+    curr_model_accuracy = round(get_accuracy(test_loader=test_loader),2)
+
+
+    curr_model_precision = round(get_precision(test_loader=test_loader),2)
+
+
+    curr_model_recall = round(get_recall(test_loader=test_loader),2)
+
+
+    metrics_list.append([CURR_NUM_SAMPLES,[curr_model_accuracy, curr_model_precision, curr_model_recall]])
+    print(metrics_list)
+
+
+
+
+table_1_metrics_list = metrics_list
+table_1_pickle_path = aug_performance_dir + f'table_1_{CURR_MODEL}_aug{AUG_STRAT}_metrics.pkl'
+
+if not os.path.exists(table_1_pickle_path): os.mkdir(table_1_pickle_path)
+
+## save table 1 metrics list
+with open(table_1_pickle_path, 'wb') as file:
+    pickle.dump(table_1_metrics_list, file)
+
+
+
+## load table 1 metrics list
+
+with open(table_1_pickle_path, 'rb') as file:
+    table_1_metrics_list_pkl = pickle.load(file)
+print(table_1_metrics_list_pkl)
+
+# correct_pred = {classname: 0 for classname in classes}
+# total_pred = {classname: 0 for classname in classes}
+
+# # again no gradients needed
+# with torch.no_grad():
+#     for data in test_loader:
+#         images, labels = data
+#         images = images.to(device)
+#         labels = labels.to(device)
+#         outputs = model(images)
+#         _, predictions = torch.max(outputs, 1)
+#         # collect the correct predictions for each class
+#         for label, prediction in zip(labels, predictions):
+#             if label == prediction:
+#                 correct_pred[classes[label]] += 1
+#             total_pred[classes[label]] += 1
+
+
+# # print accuracy for each class
+# for classname, correct_count in correct_pred.items():
+#     accuracy = 100 * float(correct_count) / total_pred[classname]
+#     print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+
+# acc_list.append((AUG_STRAT, accuracy))
+# print(acc_list)
+
+
+
+
+
+
+
