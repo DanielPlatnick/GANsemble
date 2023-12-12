@@ -239,6 +239,9 @@ metrics_list = []
 model_list = ['CNN', 'Resnet50_base', 'Resnet50_pretrained']
 sample_size_list = [10]
 num_epochs = 150
+batch_size = 4
+run = 2
+
 
 ## using a large batch size for more accurate gradient updates considering the small dataset size
 
@@ -248,8 +251,8 @@ num_epochs = 150
 
 for curr_sample_size in sample_size_list:
 
-    if curr_sample_size == 10: batch_size = 64
-    else: batch_size = 4
+    # if curr_sample_size == 10: batch_size = 64
+    # else: batch_size = 4
 
 
     AUG_STRAT = 1
@@ -267,7 +270,7 @@ for curr_sample_size in sample_size_list:
     current_model = training_dir.split('\\')[-2]
 
 
-    model_weights_path = aug_models_dir + f'\\{current_model}_{CURR_NUM_SAMPLES}_{num_epochs}epochs.pth'
+    model_weights_path = aug_models_dir + f'\\run{run}_{current_model}_{CURR_NUM_SAMPLES}_{num_epochs}epochs.pth'
 
     # setting acc, precision, recall storage
     aug_performance_dir = f'info_data_chooser\\{CURR_MODEL}\\acc_prec_recall\\'
@@ -434,44 +437,43 @@ for curr_sample_size in sample_size_list:
                                 for j in range(4)))
 
 
-    correct = 0
-    total = 0
-
-
-
-
 
     curr_model_accuracy = round(get_accuracy(test_loader=test_loader),2)
-
-
     curr_model_precision = round(get_precision(test_loader=test_loader),2)
-
-
     curr_model_recall = round(get_recall(test_loader=test_loader),2)
-
-
     metrics_list.append([CURR_NUM_SAMPLES,[curr_model_accuracy, curr_model_precision, curr_model_recall]])
-    print(metrics_list)
+    # print(metrics_list)
 
 
 
-
-table_1_metrics_list = metrics_list
+table_1_curr_metrics_list = metrics_list
 table_1_pickle_path = aug_performance_dir + f'table_1_{CURR_MODEL}_aug{AUG_STRAT}_metrics.pkl'
 
-if not os.path.exists(table_1_pickle_path): os.mkdir(table_1_pickle_path)
 
-## save table 1 metrics list
-with open(table_1_pickle_path, 'wb') as file:
-    pickle.dump(table_1_metrics_list, file)
-
+## if pkl not exist, create it
+if not os.path.exists(table_1_pickle_path):
+    with open(table_1_pickle_path, 'wb') as f:
+        pickle.dump([],f)
 
 
 ## load table 1 metrics list
-
 with open(table_1_pickle_path, 'rb') as file:
     table_1_metrics_list_pkl = pickle.load(file)
 print(table_1_metrics_list_pkl)
+
+## append metrics from current neural network
+table_1_metrics_list_pkl.append(table_1_curr_metrics_list)
+# table_1_metrics_list_pkl.remove(table_1_metrics_list_pkl[0][0])
+
+## overwrite pkl file with new file containing appended table 1 metrics list
+with open(table_1_pickle_path, 'wb') as file:
+    pickle.dump(table_1_metrics_list_pkl, file)
+
+## verify update of metrics list
+with open(table_1_pickle_path, 'rb') as file:
+    test_metrics = pickle.load(file)
+print(test_metrics)
+
 
 # correct_pred = {classname: 0 for classname in classes}
 # total_pred = {classname: 0 for classname in classes}
