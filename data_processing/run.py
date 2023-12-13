@@ -25,7 +25,7 @@ raw_data_dir = data_processing_dir + 'raw_data\\'
 
 # print(augment_strategy_list, combos)
 
-# build_data(40, augment_strategy_list)
+# build_data(100, augment_strategy_list)
 
 
 
