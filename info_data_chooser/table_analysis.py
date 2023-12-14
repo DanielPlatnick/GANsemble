@@ -21,9 +21,31 @@ def unpack_pkl_files(pkl_data_dir):
 
     return pkl_data
 
+def create_table_1(pkl_data):
 
-table_1_pkl_dir = 'info_data_chooser\\Resnet50_base\\acc_prec_recall'
+    for data in pkl_data:
+        for i in range(len(data)):
+            # Check if the item is nested within an additional list
+            if isinstance(data[i], list) and len(data[i]) == 1 and isinstance(data[i][0], list):
+                data[i] = data[i][0]
 
-table_1_data = unpack_pkl_files(table_1_pkl_dir)
+# Displaying the modified part for verification
+    pkl_data = [item for sublist in pkl_data for item in sublist if isinstance(item, list)]
+    print(pkl_data)
+    print(len(pkl_data))
 
-print(table_1_data)
+    table_1 = None
+    
+    return table_1
+
+
+models = ['CNN', 'Resnet50_base', 'Resnet50_pretrained']
+model = models[2]
+
+table_1_pkl_dir = f'info_data_chooser\\{model}\\acc_prec_recall\\table_1_{model}_data'
+
+
+table_1_pkl_data = unpack_pkl_files(table_1_pkl_dir)
+
+table_1 = create_table_1(table_1_pkl_data)
+# print(table_1)

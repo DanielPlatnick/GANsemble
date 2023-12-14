@@ -144,7 +144,7 @@ def define_generator(latent_dim, n_classes=10):
 	# label input
 	in_label = Input(shape=(1,))  #Input of dimension 1
 	# embedding for categorical input
-    # each label (total 10 classes for cifar), will be represented by a vector of size 50. 
+    # each label (total 10 classes for the microplastics dataset), will be represented by a vector of size 50. 
 	li = Embedding(n_classes, 50)(in_label) #Shape 1,50
     
 	# # linear multiplication

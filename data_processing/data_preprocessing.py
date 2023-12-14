@@ -184,8 +184,10 @@ def combine_augment_strategies(augment_strategies=[augment_strategy_1, augment_s
     three_way_combinations = list(combinations(augment_strategies, 3))
     four_way_combinations = list(combinations(augment_strategies, 4))
 
-    # Decide either 2-step or full factorial designed study
-    # all_combinations = solo_combinations + pairwise_combinations 
+    # Decide n-step factorial design where N = number of augment strats:
+    # n=1 --> solo combinations, n=2 --> pairwise combinations, n=3 --> threeway combinations, ...  n=N --> all combinations.
+
+    # n=2: all_combinations = solo_combinations + pairwise_combinations 
     all_combinations = solo_combinations + pairwise_combinations + three_way_combinations + four_way_combinations
 
     return all_combinations

@@ -239,7 +239,7 @@ def imshow(img):
 model_list = ['CNN', 'Resnet50_base', 'Resnet50_pretrained']
 
 sample_size_list = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-sample_size_list = [x for x in sample_size_list  if x == 100]
+sample_size_list = [x for x in sample_size_list  if x == 80]
 num_epochs = 150
 batch_size = 4
 
@@ -261,7 +261,7 @@ for run in range(1,6):
 
         AUG_STRAT = 1
         CURR_NUM_SAMPLES = curr_sample_size
-        CURR_MODEL = model_list[1]
+        CURR_MODEL = model_list[2]
 
         data_processing_dir = os.getcwd() + '\\data_processing\\'
 
@@ -283,7 +283,7 @@ for run in range(1,6):
 
         # image dimensions are 865x1167 pixels with 3 channels
         # model = SyntheticDataChooser_CNN()
-        model = SyntheticDataChooser_ResNet50(pretrained=False)
+        model = SyntheticDataChooser_ResNet50(pretrained=True)
 
         model_used = str(model)
         model_used = model_used.split('(')[0]
