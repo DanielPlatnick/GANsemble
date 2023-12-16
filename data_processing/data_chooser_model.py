@@ -235,245 +235,242 @@ def imshow(img):
 
 
 
-
 model_list = ['CNN', 'Resnet50_base', 'Resnet50_pretrained']
 
-sample_size_list = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-sample_size_list = [x for x in sample_size_list  if x == 80]
+
+# for table 1 study
+# sample_size_list = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+# sample_size_list = [x for x in sample_size_list  if x == 80]
 num_epochs = 150
 batch_size = 4
 
 # run = 5
 
-
-
-for run in range(1,6):
+for run in range(1,4):
 
     metrics_list = []
 
-    # using aug strats 1 and 4 for base study
-
-    for curr_sample_size in sample_size_list:
-
-        # if curr_sample_size == 10: batch_size = 64
-        # else: batch_size = 4
-
-
-        AUG_STRAT = 1
-        CURR_NUM_SAMPLES = curr_sample_size
-        CURR_MODEL = model_list[2]
-
-        data_processing_dir = os.getcwd() + '\\data_processing\\'
-
-        training_dir = data_processing_dir + f'augmented_datasets\\aug_data_{CURR_NUM_SAMPLES}_samples\\aug_strategy_{AUG_STRAT}\\'
-        test_dir = data_processing_dir + 'evaluation_set\\'
-
-        # setting weight storage
-        aug_models_dir = f'info_data_chooser\\{CURR_MODEL}\\weights_data_chooser\\'
-        if not os.path.exists(aug_models_dir): os.mkdir(aug_models_dir)
-        current_model = training_dir.split('\\')[-2]
-
-
-        model_weights_path = aug_models_dir + f'\\n{CURR_NUM_SAMPLES}_run{run}_{CURR_MODEL}_{current_model}_{num_epochs}epochs.pth'
-
-        # setting acc, precision, recall storage
-        aug_performance_dir = f'info_data_chooser\\{CURR_MODEL}\\acc_prec_recall\\'
-        if not os.path.exists(aug_performance_dir): os.mkdir(aug_performance_dir)
-
-
-        # image dimensions are 865x1167 pixels with 3 channels
-        # model = SyntheticDataChooser_CNN()
-        model = SyntheticDataChooser_ResNet50(pretrained=True)
-
-        model_used = str(model)
-        model_used = model_used.split('(')[0]
-        height = 875
-        # pad to (3,1180,1180)
-        width = 1167
-
-
-        # transforms
-        transform = transforms.Compose(
-            [transforms.ToTensor(), transforms.Pad((6,153,7,152), fill=255), transforms.Resize((244,244), antialias=True), 
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-        train_dataset = Microplastics_Dataset(root_dir=training_dir, transform=transform)
-        test_dataset = Microplastics_Dataset(root_dir=test_dir, transform=transform)
 
 
 
-        # print(training_dir)
-        # print(test_dir)
-        # print(aug_models_dir)
-        # print(model_weights_path)
-        # print(aug_performance_dir)
+    AUG_STRAT = 15
+    CURR_NUM_SAMPLES = 50
+    CURR_MODEL = model_list[2]
+    # if using pre-trained then make sure to set Resnet50 with pretrained=True while calling the Resnet50 class
+
+    data_processing_dir = os.getcwd() + '\\data_processing\\'
+
+    training_dir = data_processing_dir + f'augmented_datasets\\aug_data_{CURR_NUM_SAMPLES}_samples\\aug_strategy_{AUG_STRAT}\\'
+    test_dir = data_processing_dir + 'evaluation_set\\'
+
+    # setting weight storage
+    aug_models_dir = f'info_data_chooser\\{CURR_MODEL}\\weights_data_chooser\\'
+    if not os.path.exists(aug_models_dir): os.mkdir(aug_models_dir)
+    current_model = training_dir.split('\\')[-2]
 
 
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    model_weights_path = aug_models_dir + f'\\n{CURR_NUM_SAMPLES}_run{run}_{CURR_MODEL}_{current_model}_{num_epochs}epochs.pth'
 
-        classes = tuple([class_dir for class_dir in os.listdir(training_dir)])
-        print(classes)
-
-        num_classes = len(train_dataset.classes)
-
-        # verify model architecture
-        # print(model)
+    # setting acc, precision, recall storage
+    aug_performance_dir = f'info_data_chooser\\{CURR_MODEL}\\acc_prec_recall\\'
+    if not os.path.exists(aug_performance_dir): os.mkdir(aug_performance_dir)
 
 
+    # image dimensions are 865x1167 pixels with 3 channels
+    # model = SyntheticDataChooser_CNN()
 
-        # Image dimensions: (1167, 875)
-        # show some images
-        # for i in range(2):
-        #     dataiter = iter(train_loader)
-        #     images, labels = next(dataiter)
+    # Set pre-training or not
+    model = SyntheticDataChooser_ResNet50(pretrained=True)
 
-        # # ## show images
-        # imshow(torchvision.utils.make_grid(images))
-        # print(labels)
-        # print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
-
-        # # Display the first image
-        # first_image.show()
-
-        # # Print the dimensions of the first image
-        # print("Image dimensions:", first_image.size)
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=0.00051, momentum=0.9)
-
-        print(torch.cuda.is_available())
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = model.to(device)
-
-        # for param in model.parameters():
-        #     print(param.device)
-
-        ## optionally load model to continue training from checkpoint
-        #### model.load_state_dict(torch.load(model_weights_path))
+    model_used = str(model)
+    model_used = model_used.split('(')[0]
+    height = 875
+    # pad to (3,1180,1180)
+    width = 1167
 
 
-        ######## Training loop ########
-        ## specified epochs at top for pathing
-        # num_epochs = x
+    # transforms
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Pad((6,153,7,152), fill=255), transforms.Resize((244,244), antialias=True), 
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-        for epoch in tqdm(range(num_epochs), desc='Epochs', unit='epoch'):
-            running_loss = 0.0
-            tqdm_train_loader = tqdm(train_loader, desc=f'Epoch {epoch + 1}/{num_epochs}', unit='batch')
-            # Use tqdm to create a loading bar for the inner loop
-            for i, data in enumerate(tqdm_train_loader, 0):
-                if model_used == 'SyntheticDataChooser_ResNet50':
-                    if model.pretrained == True:
-                                # Freeze all layers
+    train_dataset = Microplastics_Dataset(root_dir=training_dir, transform=transform)
+    test_dataset = Microplastics_Dataset(root_dir=test_dir, transform=transform)
+
+
+
+    # print(training_dir)
+    # print(test_dir)
+    # print(aug_models_dir)
+    # print(model_weights_path)
+    # print(aug_performance_dir)
+
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    classes = tuple([class_dir for class_dir in os.listdir(training_dir)])
+    print(classes)
+
+    num_classes = len(train_dataset.classes)
+
+    # verify model architecture
+    # print(model)
+
+
+
+    # Image dimensions: (1167, 875)
+    # show some images
+    # for i in range(2):
+    #     dataiter = iter(train_loader)
+    #     images, labels = next(dataiter)
+
+    # # ## show images
+    # imshow(torchvision.utils.make_grid(images))
+    # print(labels)
+    # print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
+
+    # # Display the first image
+    # first_image.show()
+
+    # # Print the dimensions of the first image
+    # print("Image dimensions:", first_image.size)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=0.00051, momentum=0.9)
+
+    print(torch.cuda.is_available())
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
+
+    # for param in model.parameters():
+    #     print(param.device)
+
+    ## optionally load model to continue training from checkpoint
+    #### model.load_state_dict(torch.load(model_weights_path))
+
+
+    ######## Training loop ########
+    ## specified epochs at top for pathing
+    # num_epochs = x
+
+    for epoch in tqdm(range(num_epochs), desc='Epochs', unit='epoch'):
+        running_loss = 0.0
+        tqdm_train_loader = tqdm(train_loader, desc=f'Epoch {epoch + 1}/{num_epochs}', unit='batch')
+        # Use tqdm to create a loading bar for the inner loop
+        for i, data in enumerate(tqdm_train_loader, 0):
+            if model_used == 'SyntheticDataChooser_ResNet50':
+                if model.pretrained == True:
+                            # Freeze all layers
+                    for param in model.resnet.parameters():
+                        param.requires_grad = False
+
+                    # Unfreeze the last fully connected layer
+                    for param in model.resnet.fc.parameters():
+                        param.requires_grad = True
+
+                    if epoch >= 15:
                         for param in model.resnet.parameters():
-                            param.requires_grad = False
-
-                        # Unfreeze the last fully connected layer
-                        for param in model.resnet.fc.parameters():
                             param.requires_grad = True
+                else:
+                    pass
 
-                        if epoch >= 15:
-                            for param in model.resnet.parameters():
-                                param.requires_grad = True
-                    else:
-                        pass
+            inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-                inputs, labels = data
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-                optimizer.zero_grad()
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
+            running_loss += loss.item()
+            tqdm_train_loader.set_postfix(loss=running_loss / (i + 1))
 
-                running_loss += loss.item()
-                tqdm_train_loader.set_postfix(loss=running_loss / (i + 1))
+        # Print the average loss for the epoch
+        average_loss = running_loss / len(train_loader)
+        print(f'Epoch {epoch + 1}, Average Loss: {average_loss:.3f}')
 
-            # Print the average loss for the epoch
-            average_loss = running_loss / len(train_loader)
-            print(f'Epoch {epoch + 1}, Average Loss: {average_loss:.3f}')
-
-        # Save the trained model
-        torch.save(model.state_dict(), model_weights_path)
+    # Save the trained model
+    torch.save(model.state_dict(), model_weights_path)
 
 
-        # # exit('model trained')
+    # # exit('model trained')
 
 
 
-        # # Print some information to verify correctness
-        # # print("Number of classes:", len(train_dataset.classes))
-        # # print("Class names:", train_dataset.classes)
-        # # print("Class to index mapping:", train_dataset.class_to_idx)
-        print("Number of samples in training dataset:", len(train_dataset))
-        print("Number of samples in test dataset:", len(test_dataset))
+    # # Print some information to verify correctness
+    # # print("Number of classes:", len(train_dataset.classes))
+    # # print("Class names:", train_dataset.classes)
+    # # print("Class to index mapping:", train_dataset.class_to_idx)
+    print("Number of samples in training dataset:", len(train_dataset))
+    print("Number of samples in test dataset:", len(test_dataset))
 
 
-        # Iterate through the test dataset
-        for index in range(len(test_dataset)):
-            image, label = test_dataset[index]
+    # Iterate through the test dataset
+    for index in range(len(test_dataset)):
+        image, label = test_dataset[index]
 
 
-        # Initialize the model
-        dataiter = iter(test_loader)
-        images, labels = next(dataiter)
-        images = images.to(device)
-        labels = labels.to(device)
-
-
-
-        model.load_state_dict(torch.load(model_weights_path))
-
-        model.eval()
-
-        outputs = model(images)
-        outputs.to(device)
-
-
-        # # print images
-        # imshow(torchvision.utils.make_grid(images))
-        # print('GroundTruth: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
-
-
-        _, predicted = torch.max(outputs, 1)
-
-        print('Predicted: ', ' '.join(f'{classes[predicted[j]]:5s}'
-                                    for j in range(4)))
+    # Initialize the model
+    dataiter = iter(test_loader)
+    images, labels = next(dataiter)
+    images = images.to(device)
+    labels = labels.to(device)
 
 
 
-        curr_model_accuracy = round(get_accuracy(test_loader=test_loader),2)
-        curr_model_precision = round(get_precision(test_loader=test_loader),2)
-        curr_model_recall = round(get_recall(test_loader=test_loader),2)
-        metrics_list.append([CURR_NUM_SAMPLES,[curr_model_accuracy, curr_model_precision, curr_model_recall]])
-        # print(metrics_list)
+    model.load_state_dict(torch.load(model_weights_path))
+
+    model.eval()
+
+    outputs = model(images)
+    outputs.to(device)
+
+
+    # # print images
+    # imshow(torchvision.utils.make_grid(images))
+    # print('GroundTruth: ', ' '.join(f'{classes[labels[j]]:5s}' for j in range(4)))
+
+
+    _, predicted = torch.max(outputs, 1)
+
+    print('Predicted: ', ' '.join(f'{classes[predicted[j]]:5s}'
+                                for j in range(4)))
 
 
 
-    table_1_curr_metrics_list = metrics_list
-    table_1_pickle_path = aug_performance_dir + f'n{CURR_NUM_SAMPLES}_table_1_{CURR_MODEL}_aug{AUG_STRAT}_metrics.pkl'
+    curr_model_accuracy = round(get_accuracy(test_loader=test_loader),2)
+    curr_model_precision = round(get_precision(test_loader=test_loader),2)
+    curr_model_recall = round(get_recall(test_loader=test_loader),2)
+    metrics_list.append([AUG_STRAT,[curr_model_accuracy, curr_model_precision, curr_model_recall]])
+    # print(metrics_list)
+
+
+    # update path of where to store your table info
+    table_curr_metrics_list = metrics_list
+    table_pickle_path = aug_performance_dir + f'n{CURR_NUM_SAMPLES}_dcm_table_{CURR_MODEL}_aug{AUG_STRAT}_metrics.pkl'
 
 
     ## if pkl not exist, create it
-    if not os.path.exists(table_1_pickle_path):
-        with open(table_1_pickle_path, 'wb') as f:
+    if not os.path.exists(table_pickle_path):
+        with open(table_pickle_path, 'wb') as f:
             pickle.dump([],f)
 
 
     ## load table 1 metrics list
-    with open(table_1_pickle_path, 'rb') as file:
-        table_1_metrics_list_pkl = pickle.load(file)
-    print(table_1_metrics_list_pkl)
+    with open(table_pickle_path, 'rb') as file:
+        table_metrics_list_pkl = pickle.load(file)
+    print(table_metrics_list_pkl)
 
     ## append metrics from current neural network
-    table_1_metrics_list_pkl.append(table_1_curr_metrics_list)
+    table_metrics_list_pkl.append(table_curr_metrics_list)
 
     ## overwrite pkl file with new file containing appended table 1 metrics list
-    with open(table_1_pickle_path, 'wb') as file:
-        pickle.dump(table_1_metrics_list_pkl, file)
+    with open(table_pickle_path, 'wb') as file:
+        pickle.dump(table_metrics_list_pkl, file)
 
     ## verify update of metrics list
-    with open(table_1_pickle_path, 'rb') as file:
+    with open(table_pickle_path, 'rb') as file:
         test_metrics = pickle.load(file)
     print(test_metrics)
 

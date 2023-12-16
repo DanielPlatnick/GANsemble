@@ -19,13 +19,13 @@ raw_data_dir = data_processing_dir + 'raw_data\\'
 
 # combos = combine_augment_strategies()
 # combos = [strat_combos for strat_combos in combos]
-# augment_strategy_list = [combos[0],combos[3]]
+# # augment_strategy_list = [combos[0],combos[3]]
 # for i, comb in enumerate(combos):
 #     print(i, comb)
 
-# print(augment_strategy_list, combos)
+# # print(augment_strategy_list, combos)
 
-# build_data(100, augment_strategy_list)
+# build_data(50, combos)
 
 
 
