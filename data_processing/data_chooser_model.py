@@ -253,7 +253,7 @@ for run in range(1,4):
 
 
 
-    AUG_STRAT = 15
+    AUG_STRAT = 4
     CURR_NUM_SAMPLES = 50
     CURR_MODEL = model_list[2]
     # if using pre-trained then make sure to set Resnet50 with pretrained=True while calling the Resnet50 class
@@ -261,6 +261,10 @@ for run in range(1,4):
     data_processing_dir = os.getcwd() + '\\data_processing\\'
 
     training_dir = data_processing_dir + f'augmented_datasets\\aug_data_{CURR_NUM_SAMPLES}_samples\\aug_strategy_{AUG_STRAT}\\'
+
+    #  no augment no RESAMPLE
+    # training_dir = data_processing_dir + 'raw_data\\polar\\'
+
     test_dir = data_processing_dir + 'evaluation_set\\'
 
     # setting weight storage
@@ -268,8 +272,10 @@ for run in range(1,4):
     if not os.path.exists(aug_models_dir): os.mkdir(aug_models_dir)
     current_model = training_dir.split('\\')[-2]
 
-
+    #### CHANGE BACK
     model_weights_path = aug_models_dir + f'\\n{CURR_NUM_SAMPLES}_run{run}_{CURR_MODEL}_{current_model}_{num_epochs}epochs.pth'
+    # model_weights_path = aug_models_dir + f'\\n{CURR_NUM_SAMPLES}_run{run}_{CURR_MODEL}_no_resample_{num_epochs}epochs.pth'
+    # model_weights_path = aug_models_dir + f'\\n{CURR_NUM_SAMPLES}_run{run}_{CURR_MODEL}_resample_{num_epochs}epochs.pth'
 
     # setting acc, precision, recall storage
     aug_performance_dir = f'info_data_chooser\\{CURR_MODEL}\\acc_prec_recall\\'
@@ -443,12 +449,16 @@ for run in range(1,4):
     curr_model_precision = round(get_precision(test_loader=test_loader),2)
     curr_model_recall = round(get_recall(test_loader=test_loader),2)
     metrics_list.append([AUG_STRAT,[curr_model_accuracy, curr_model_precision, curr_model_recall]])
+    # metrics_list.append(['No resampling',[curr_model_accuracy, curr_model_precision, curr_model_recall]])
+    # metrics_list.append(['Resampling',[curr_model_accuracy, curr_model_precision, curr_model_recall]])
     # print(metrics_list)
 
 
     # update path of where to store your table info
     table_curr_metrics_list = metrics_list
     table_pickle_path = aug_performance_dir + f'n{CURR_NUM_SAMPLES}_dcm_table_{CURR_MODEL}_aug{AUG_STRAT}_metrics.pkl'
+    # table_pickle_path = aug_performance_dir + f'n{CURR_NUM_SAMPLES}_dcm_table_{CURR_MODEL}_no_resample_metrics.pkl'
+    # table_pickle_path = aug_performance_dir + f'n{CURR_NUM_SAMPLES}_dcm_table_{CURR_MODEL}_resample_metrics.pkl'
 
 
     ## if pkl not exist, create it

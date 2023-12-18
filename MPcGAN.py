@@ -163,7 +163,7 @@ def define_generator(latent_dim, n_classes=10):
 	in_lat = Input(shape=(latent_dim,))  #Input of dimension 100
     
 
-	# vector starts as the size which is 2 factorsof2 smaller than the input images     (factors of 2 are based on 2 convolutional layers of stride length 2)
+	# vector starts as the size which is 2 factors of 2 smaller than the input images     (factors of 2 are based on 2 convolutional layers of stride length 2)
 
 
 	# playing with number of nodes

@@ -6,11 +6,10 @@ from build_augmented_data import *
 Chosen dataset based on CNN combines with the original dataset to balance it and train cGAN
 """
 
-# when training the cGAN on data for real, only use transformations that preserve the invertible property (so the cGAN will not produce samples out of the training set distribution)
-def generate_gan_data_paths(data_processing_dir, desired_enriched_class_size=35):
+def generate_gan_data_paths(data_processing_dir, desired_enriched_class_size=50):
 
-    chosen_dir = data_processing_dir + "augmented_datasets\\aug_data_30_samples\\aug_strategy_4\\"
-    raw_data_dir = data_processing_dir + "raw_data\\polar\\"
+    chosen_dir = data_processing_dir + "augmented_datasets\\aug_data_50_samples\\aug_strategy_7\\"
+    raw_data_dir = data_processing_dir + "raw_data_origin\\polar\\"
     enriched_data_dir = data_processing_dir + 'gan_dataset\\'
     if not os.path.exists(enriched_data_dir): os.mkdir(enriched_data_dir)
     raw_class_sizes = []
@@ -53,6 +52,7 @@ def generate_gan_data_paths(data_processing_dir, desired_enriched_class_size=35)
 
 # copy each file into new dataset dir from enriched paths list
 def generate_gan_dataset(enriched_data_paths, enriched_dataset_dir):
+
     enriched_class_list = os.listdir(enriched_dataset_dir)
     for class_path_list in range(len(enriched_class_list)):
         enriched_class_dir = enriched_dataset_dir + enriched_class_list[class_path_list] + '\\'
@@ -64,11 +64,14 @@ def generate_gan_dataset(enriched_data_paths, enriched_dataset_dir):
             print(enriched_class_dir)
             shutil.copy(enriched_data_paths[class_path_list][obs_path], enriched_class_dir)
 
+    return None
 
 
-def generate_gan_baseline_data_paths(data_processing_dir, desired_enriched_class_size=35):
 
-    raw_data_dir = data_processing_dir + "raw_data\\polar\\"
+# create resampling baseline
+def generate_gan_baseline_data_paths(data_processing_dir, desired_enriched_class_size=50):
+
+    raw_data_dir = data_processing_dir + "raw_data_origin\\polar\\"
     enriched_data_dir = data_processing_dir + 'gan_baseline_dataset\\'
     if not os.path.exists(enriched_data_dir): os.mkdir(enriched_data_dir)
     raw_class_sizes = []
@@ -125,6 +128,8 @@ def generate_gan_baseline_dataset(gan_baseline_data_paths, gan_baseline_dataset_
             shutil.copy(src_dir, dest_dir)
             print(obs_path)
             counter += 1
+
+    return None
         
 
 def create_unbiased_eval_set(raw_data_dir, num_stratified_samples=2):
@@ -157,20 +162,19 @@ def create_unbiased_eval_set(raw_data_dir, num_stratified_samples=2):
     return None
 
 
-# data_processing_dir = os.getcwd() + "\\data_processing\\"
+data_processing_dir = os.getcwd() + "\\data_processing\\"
 
-# gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
-# gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
+gan_dataset_dir = data_processing_dir + 'gan_dataset\\'
+gan_baseline_dataset_dir = data_processing_dir + 'gan_baseline_dataset\\'
 
-# gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
+gan_dataset_paths = generate_gan_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=50)
+gan_dataset_size = sum([len(x) for x in gan_dataset_paths])
+print(gan_dataset_size)
+generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
 
-# gan_dataset_size = sum([len(x) for x in gan_dataset_paths])
-# print(gan_dataset_size)
 
-# generate_gan_dataset(gan_dataset_paths, gan_dataset_dir)
-# gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=35)
+# gan_baseline_dataset_paths = generate_gan_baseline_data_paths(data_processing_dir=data_processing_dir, desired_enriched_class_size=50)
 # print([len(x) for x in gan_baseline_dataset_paths])
-
 # generate_gan_baseline_dataset(gan_baseline_dataset_paths, gan_baseline_dataset_dir)
 # dir = 'C:\\Users\\Owner\\Desktop\\microplastics_data_generation_private\\data_processing\\gan_baseline_dataset\\'
 
