@@ -22,7 +22,6 @@ Microplastic particle ingestion or inhalation by humans is a problem of growing 
 ├── GANsemble
 │   ├── .git
 │   ├── MPcGAN.py
-│   ├── MPcGAN_tf.py
 │   ├── README.md
 │   ├── 📁 data_processing
 │   ├── 📁 generator_weights
