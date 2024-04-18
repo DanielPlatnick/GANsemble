@@ -30,12 +30,11 @@ Microplastic particle ingestion or inhalation by humans is a problem of growing 
 │   ├── 📁 notebooks
 │   ├── requirements.txt
 │   └── 📁 utils
-├── README.md
-└── imgs
-    ├── fSYMPFilter.png
-    ├── fconversion.png
-    ├── fqualitative.png
-    └── fsizesearch.png
+    └── imgs
+        ├── fSYMPFilter.png
+        ├── fconversion.png
+        ├── fqualitative.png
+        └── fsizesearch.png
 ```
 
 
