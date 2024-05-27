@@ -11,7 +11,7 @@ Microplastic particle ingestion or inhalation by humans is a problem of growing 
 ![Figure 1](imgs/fconversion.png)
 ### Figure 2: Qualitative Properties of Generated Microplastics
 ![Figure 2](imgs/fqualitative.png)
-### Figure 3: Size Search Space
+### Figure 3: Best Amount of Oversampling Search
 ![Figure 3](imgs/fsizesearch.png)
 
 
