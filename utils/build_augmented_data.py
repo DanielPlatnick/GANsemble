@@ -1,8 +1,5 @@
 from data_preprocessing import *
 
-
-#NOTE: Maybe shuffle the class dir list before building the datasets and set the seed. Eitherway just keep in mind the bias and effects of simulated randomness
-
 # Checking to make sure each example is the same dimensions
 def validate_data(data_dir, image_1_path):
     valid_dataset_size_check = 0

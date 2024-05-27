@@ -128,8 +128,6 @@ def load_images_from_directory(directory):
 
 
 
-# groundtruth_dir = 'FID_IS_groundtruth_299/'
-# dirs = ['FID_IS_baseline-1_299/', 'FID_IS_baseline-2_299/', 'FID_IS_baseline-3_299/']
 
 print(calculate_fid_for_directories(os.getcwd() + '\\FID_IS_groundtruth_299\\', os.getcwd() + '\\FID_IS_baseline-1_299\\'))
 # for i in range(len(dirs)):
@@ -195,11 +193,12 @@ print(calculate_fid_for_directories(os.getcwd() + '\\FID_IS_groundtruth_299\\', 
 
 
 #     model_dir_path = 'MPcGAN_output_n210/MPcGAN_weights_n210/'
-#     models = ['baseline-best-1_MPcGAN_gen_150epochs.h5', 
-#             'baseline_resamplebest-1_MPcGAN_gen_150epochs.h5', 'aug1best_MPcGAN_gen_70epochs.h5', 
-#             'aug7best_MPcGAN_gen_120epochs.h5', 'aug4best_MPcGAN_gen_150epochs.h5']
 
-    
+#     models = ['baseline-best_MPcGAN_gen_epochs.h5',
+#             'baseline_resamplebest_MPcGAN_gen_epochs.h5', 'aug1best_MPcGAN_gen_epochs.h5',
+#             'aug7best_MPcGAN_gen_120epochs.h5', 'aug4best_MPcGAN_gen_epochs.h5']
+
+   
 #     output_dir = f'per_class_FID_IS_aug4-{i+1}_299'
 #     if not os.path.exists(output_dir): os.mkdir(output_dir)
 

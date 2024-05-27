@@ -12,9 +12,7 @@ from itertools import combinations
 
 ''' Augmentation functions expect and return a numpy array '''
 
-# maybe add a horizontal stretching option
 
-# an option that randomly applies all of the other augmentation options
 
 # Data augmentation method 1 - Horizontal shifting and horizontal flipping
 def augment_strategy_1(raw_image):
@@ -176,7 +174,7 @@ def augment_strategy_4(input_image, num_circles=40, num_rectangles=15):
     return result_image
 
 
-# Combine the strategies in a factorial study design            #LOOK INTO SPECIFICS OF NUMBER OF STUDIES GENERATED
+# Combine the strategies in a factorial study design   
 def combine_augment_strategies(augment_strategies=[augment_strategy_1, augment_strategy_2, augment_strategy_3, augment_strategy_4]):
 
     solo_combinations = [[strat] for strat in augment_strategies]

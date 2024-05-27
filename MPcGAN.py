@@ -111,7 +111,6 @@ def define_discriminator(in_shape=(32,32,3), n_classes=10, d_lr=0.0002):
 	# concat label as a channel
 	merge = Concatenate()([in_image, li]) #32x32x4 (4 channels, 3 for image and the other for labels)
     
-	# downsample: This part is same as unconditional GAN upto the output layer.
     # combine input label with input image and supply as inputs to the model. 
 	fe = Conv2D(128, (3,3), strides=(2,2), padding='same')(merge) #16x16x128
 	fe = LeakyReLU(alpha=0.2)(fe)
@@ -137,7 +136,6 @@ test_discr = define_discriminator()
 print(test_discr.summary())
 
 
-# define the standalone generator model
 # latent vector and label as inputs
 def define_generator(latent_dim, n_classes=10):
     
@@ -166,7 +164,6 @@ def define_generator(latent_dim, n_classes=10):
 	# vector starts as the size which is 2 factors of 2 smaller than the input images     (factors of 2 are based on 2 convolutional layers of stride length 2)
 
 
-	# playing with number of nodes
 	# n_nodes = 128 * 8 * 8
 	n_nodes = 128 * 32 * 32
 
@@ -196,7 +193,6 @@ print(test_gen.summary())
 def define_gan(g_model, d_model, g_lr=0.002):
 	d_model.trainable = False  #Discriminator is trained separately. So set to not trainable.
     
-    ## connect generator and discriminator...
 
 	#1. pass noise and label through generator and generate fake image
 	# first, get noise and label inputs from generator model
@@ -223,7 +219,6 @@ def define_gan(g_model, d_model, g_lr=0.002):
 	# 	model.compile(loss='binary_crossentropy', optimizer=opt)
 	return model
 
-# load cifar images
 def load_real_samples(mp_data=True, image_size=(32,32)):
 
 	if mp_data == False:
@@ -255,10 +250,6 @@ def load_real_samples(mp_data=True, image_size=(32,32)):
 # print(len(d), type(d))
 
 
-# # select real samples
-# pick a batch of random real samples to train the GAN
-# discrim trains on half real half fake batches
-#For each real image we assign a label 1 and for fake we assign label 0. 
 def generate_real_samples(dataset, n_samples):
 	# split into images and labels
 	images, labels = dataset  
@@ -266,7 +257,6 @@ def generate_real_samples(dataset, n_samples):
 	ix = randint(0, images.shape[0], n_samples)
 	# select images and labels
 	X, labels = images[ix], labels[ix]
-	# generate class labels and assign to y (don't confuse this with the above labels that correspond to cifar labels)
 	y = ones((n_samples, 1))  #Label=1 indicating they are real
 	return [X, labels], y
 
@@ -283,7 +273,6 @@ def generate_latent_points(latent_dim, n_samples, n_classes=10):
 	return [z_input, labels]
 
 # use the generator to generate n fake examples, with class labels
-# Supply the generator, latent_dim and number of samples as input.
 # Use the above latent point generator to generate latent points. 
 def generate_fake_samples(generator, latent_dim, n_samples):
 	# generate points in latent space
@@ -294,13 +283,6 @@ def generate_fake_samples(generator, latent_dim, n_samples):
 	y = zeros((n_samples, 1))  #Label=0 indicating they are fake
 
 	return [images, labels_input], y
-
-# train the generator and discriminator
-# loop through a number of epochs to train our Discriminator by first selecting
-# a random batch of images from our true/real dataset.
-# Then, generating a set of images using the generator. 
-#Feed both set of images into the Discriminator. 
-#Finally, set the loss parameters for both the real and fake images, as well as the combined loss. 
 
 # previously set n_batch=128
 def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=128):
