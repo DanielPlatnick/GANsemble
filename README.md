@@ -62,12 +62,15 @@ GO TO: [GANsemble PlayGround](notebooks/playground.ipynb)
 ## Citation
 
 ```bash
-@misc{platnick2024gansemble,
-      title={GANsemble for Small and Imbalanced Data Sets: A Baseline for Synthetic Microplastics Data}, 
-      author={Daniel Platnick and Sourena Khanzadeh and Alireza Sadeghian and Richard Anthony Valenzano},
-      year={2024},
-      eprint={2404.07356},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+@article{Platnick2024GANsemble,
+	author = {Platnick, Daniel and Khanzadeh, Sourena and Sadeghian, Alireza and Valenzano, Richard},
+	journal = {Proceedings of the Canadian Conference on Artificial Intelligence},
+	year = {2024},
+	month = {may 27},
+	note = {https://caiac.pubpub.org/pub/0hhra7j6},
+	publisher = {Canadian Artificial Intelligence Association (CAIAC)},
+	title = {GANsemble for {Small} and {Imbalanced} {Data} {Sets}:A {Baseline} for {Synthetic} {Microplastics} {Data}},
 }
+
+
 ```
