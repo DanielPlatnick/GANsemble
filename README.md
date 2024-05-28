@@ -1,4 +1,4 @@
-# Official Repo for the paper GANsemble for Small and Imbalanced Data Sets: A Baseline for Synthetic Microplastics Data
+# Official repo for the paper GANsemble for Small and Imbalanced Data Sets: A Baseline for Synthetic Microplastics Data
 
 ## Abstract
 
