@@ -22,7 +22,6 @@ import torchvision.transforms as transforms
 
 
 
-# IF SOME WEIRD ERROR STARTS OCCURING WITH DIRS THAT WONT GO AWAY THEN MAYBE ITS BECAUSE U   PLACED SOMETHING SOMEEWHERE
 # Image dimensions: (1167, 875)
 
 
